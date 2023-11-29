@@ -7,6 +7,7 @@ import sys
 import fractions
 import shape
 import main_menu
+import quick_start
 
 os.environ["SDL_VIDEO_CENTERED"] = "1"
 
@@ -26,16 +27,15 @@ canvas_w = screens[0].width
 canvas_h = screens[0].height
 screen_ratio = list(format(fractions.Fraction(int(canvas_w), int(canvas_h))))
 screen_ratio.pop(1)
-print(screen_ratio)
 
 pygame.init()
-
-main_display = pygame.display.set_mode((400, 300), flags=pygame.NOFRAME, depth=32, vsync=True)
-logo = pygame.image.load("Logo@4x.png").convert_alpha()
-logo = pygame.transform.scale(logo, (logo.get_size()[0] / 4, logo.get_size()[0] / 4))
-main_display.blit()
+quick = quick_start.QuickStart()
 fps_clock = pygame.time.Clock()
 fps_count = 500
+
+loader_time = time.time()
+while time.time() - loader_time <= 2:
+    pass
 
 menu = main_menu.MainScreen((canvas_w, canvas_h))
 
@@ -44,9 +44,8 @@ for i in range(4):
     shape_list[0].append([random.randint(0, 3), list(colors.values())[random.randint(0, len(colors) - 1)]])
 
 shape_test = shape.Shape(shape_list)
-loader_time = time.time()
-while time.time() - loader_time <= 4:
-    pass
+
+prev_mouse_pos = pygame.mouse.get_pos()
 
 main_display = pygame.display.set_mode((canvas_w, canvas_h), flags=pygame.FULLSCREEN, depth=32, vsync=True)
 
@@ -55,10 +54,16 @@ while True:
         if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
             pygame.quit()
             sys.exit()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            function = menu.on_click(event.pos)
+            if function == "exit":
+                pygame.quit()
+                sys.exit()
 
     main_display.fill((100, 100, 100))
     main_display.blit(menu.surface, (0, 0))
-
+    if prev_mouse_pos != pygame.mouse.get_pos():
+        menu.hover(pygame.mouse.get_pos())
 
     pygame.display.update()
     fps_clock.tick(500)
