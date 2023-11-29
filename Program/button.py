@@ -8,8 +8,8 @@ class Button(pygame.sprite.Sprite):
 
     def __init__(self, size, pos, text, func, font="Bebas-Regular.ttf"):
         pygame.sprite.Sprite.__init__(self)
-        self.surface = pygame.surface.Surface(size)
-        self.rect = self.surface.get_rect()
+        self.image = pygame.surface.Surface(size)
+        self.rect = self.image.get_rect()
         self.rect.x = pos[0] - size[0] / 2
         self.rect.y = pos[1] - size[1] / 2
         self.position = pos
@@ -21,14 +21,14 @@ class Button(pygame.sprite.Sprite):
         font = pygame.font.Font(self.font, self.size[1] - 10)
         self.text_render = font.render(self.text, True, (0, 0, 0))
         self.text_rect = self.text_render.get_rect(center=(self.size[0] / 2, self.size[1] / 2))
-        self.renew()
+        self.check()
 
-    def renew(self, hover=False):
+    def check(self, hover=False):
         if hover:
-            self.surface.fill(colors[1])
+            self.image.fill(colors[1])
         else:
-            self.surface.fill(colors[0])
-        self.surface.blit(self.text_render, self.text_rect)
+            self.image.fill(colors[0])
+        self.image.blit(self.text_render, self.text_rect)
 
 
 

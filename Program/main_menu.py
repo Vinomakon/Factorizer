@@ -18,8 +18,9 @@ class MainScreen:
         exit_button = button.Button((250, 75), (screen_size[0] / 2, screen_size[1] / 1.1), "Exit", "exit")
         self.buttons = pygame.sprite.Group()
         self.buttons.add(start_button, exit_button)
-        self.surface.blit(start_button.surface, start_button.rect)
-        self.surface.blit(exit_button.surface, exit_button.rect)
+        self.buttons.draw(self.surface)
+        # self.surface.blit(start_button.surface, start_button.rect)
+        # self.surface.blit(exit_button.surface, exit_button.rect)
 
     def on_click(self, click_pos):
         for but in self.buttons:
@@ -29,8 +30,8 @@ class MainScreen:
     def hover(self, mouse_pos):
         for but in self.buttons:
             if but.rect.collidepoint(mouse_pos):
-                but.renew(True)
+                but.check(True)
             else:
-                but.renew(False)
-            self.surface.blit(but.surface, but.rect)
+                but.check(False)
+            self.buttons.draw(self.surface)
 

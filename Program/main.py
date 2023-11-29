@@ -1,13 +1,12 @@
 import time
 import screeninfo
 import pygame
-import random
 import os
 import sys
 import fractions
-import shape
 import main_menu
 import quick_start
+import game_test
 
 os.environ["SDL_VIDEO_CENTERED"] = "1"
 
@@ -33,17 +32,14 @@ quick = quick_start.QuickStart()
 fps_clock = pygame.time.Clock()
 fps_count = 500
 
+screen_location = 0
+#
 loader_time = time.time()
 while time.time() - loader_time <= 2:
     pass
-
+#
 menu = main_menu.MainScreen((canvas_w, canvas_h))
-
-shape_list = [[]]
-for i in range(4):
-    shape_list[0].append([random.randint(0, 3), list(colors.values())[random.randint(0, len(colors) - 1)]])
-
-shape_test = shape.Shape(shape_list)
+game = game_test.Test((canvas_w, canvas_h))
 
 prev_mouse_pos = pygame.mouse.get_pos()
 
@@ -51,19 +47,34 @@ main_display = pygame.display.set_mode((canvas_w, canvas_h), flags=pygame.FULLSC
 
 while True:
     for event in pygame.event.get():
-        if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             pygame.quit()
             sys.exit()
+
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            function = menu.on_click(event.pos)
-            if function == "exit":
-                pygame.quit()
-                sys.exit()
+            if screen_location == 0:
+                function = menu.on_click(event.pos)
+                if function == "exit":
+                    pygame.quit()
+                    sys.exit()
+                elif function == "start":
+                    screen_location = 1
+
+            if screen_location == 1:
+                pass
 
     main_display.fill((100, 100, 100))
-    main_display.blit(menu.surface, (0, 0))
-    if prev_mouse_pos != pygame.mouse.get_pos():
-        menu.hover(pygame.mouse.get_pos())
+    if screen_location == 0:
+        main_display.blit(menu.surface, (0, 0))
+        if prev_mouse_pos != pygame.mouse.get_pos():
+            menu.hover(pygame.mouse.get_pos())
+            prev_mouse_pos = pygame.mouse.get_pos()
+            
+    elif screen_location == 1:
+        main_display.blit(game.surface, (0, 0))
+        if prev_mouse_pos != pygame.mouse.get_pos():
+            game.hover(pygame.mouse.get_pos())
+            prev_mouse_pos = pygame.mouse.get_pos()
 
     pygame.display.update()
     fps_clock.tick(500)
