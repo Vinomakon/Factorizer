@@ -8,6 +8,7 @@ images = {"delete": "images/delete.png"}
 class Function(pygame.sprite.Sprite):
     def __init__(self, func_type, pos=(0, 0)):
         pygame.sprite.Sprite.__init__(self)
+        self.spawn_pos = pos
 
         self.func_image = pygame.image.load(images["delete"])
         self.func_image = pygame.transform.scale(self.func_image, (200, self.func_image.get_size()[1] * (200 / self.func_image.get_size()[0])))
@@ -16,8 +17,8 @@ class Function(pygame.sprite.Sprite):
         self.dot_image = pygame.transform.scale(self.dot_image, (20, self.dot_image.get_size()[1] * (20 / self.dot_image.get_size()[0])))
         self.dot_rect = self.dot_image.get_rect()
         self.dot_rect.center = (10, 10)
-        self.dot_rect.x = 20
-        self.dot_rect.y = self.func_image.get_size()[1] / 2 - 10
+        self.dot_rect.x = 20 + pos[0]
+        self.dot_rect.y = self.func_image.get_size()[1] / 2 - 10 + pos[1]
 
         self.image = pygame.surface.Surface((200, 150), pygame.SRCALPHA)
 
@@ -28,7 +29,7 @@ class Function(pygame.sprite.Sprite):
         self.init_pos = pos
         self.start_drag = (0, 0)
         self.image.blit(self.func_image, (0, 0))
-        self.image.blit(self.dot_image, self.dot_rect)
+        self.image.blit(self.dot_image, (20, self.func_image.get_size()[1] / 2 - 10))
 
     def check(self, mouse_pos):
         if self.dot_rect.collidepoint(mouse_pos[0], mouse_pos[1]):
@@ -44,7 +45,6 @@ class Function(pygame.sprite.Sprite):
             self.init_pos = (self.rect.x, self.rect.y)
             self.dot_rect.x = 20 + self.init_pos[0]
             self.dot_rect.y = self.func_image.get_size()[1] / 2 - 10 + self.init_pos[1]
-            print(f"{self.dot_rect.x}, {self.dot_rect.y}")
 
     def update(self, mouse_pos):
         if self.move_with_mouse:
