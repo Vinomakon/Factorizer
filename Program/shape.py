@@ -27,7 +27,7 @@ class Shape:
     def update(self):
         self.shapes = []
         for shape in range(4):
-            self.shapes.append(pygame.image.load(str(shape + 1) + "@4x.png").convert_alpha())
+            self.shapes.append(pygame.image.load("/images/" + str(shape + 1) + ".png").convert_alpha())
         self.surface = pygame.Surface((448, 448), pygame.SRCALPHA | pygame.SCALED)
         for layer in range(len(self.layers)):
             for i in range(4):

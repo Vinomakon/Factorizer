@@ -41,8 +41,6 @@ while time.time() - loader_time <= 2:
 menu = main_menu.MainScreen((canvas_w, canvas_h))
 game = game_test.Test((canvas_w, canvas_h))
 
-prev_mouse_pos = pygame.mouse.get_pos()
-
 main_display = pygame.display.set_mode((canvas_w, canvas_h), flags=pygame.FULLSCREEN, depth=32, vsync=True)
 
 while True:
@@ -51,30 +49,30 @@ while True:
             pygame.quit()
             sys.exit()
 
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            if screen_location == 0:
+        if screen_location == 0:
+            if event.type == pygame.MOUSEBUTTONDOWN:
                 function = menu.on_click(event.pos)
                 if function == "exit":
                     pygame.quit()
                     sys.exit()
                 elif function == "start":
                     screen_location = 1
-
-            if screen_location == 1:
-                pass
+        elif screen_location == 1:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                game.on_click(event.pos)
+            elif event.type == pygame.MOUSEBUTTONUP:
+                game.on_release(event.pos)
 
     main_display.fill((100, 100, 100))
+
     if screen_location == 0:
         main_display.blit(menu.surface, (0, 0))
-        if prev_mouse_pos != pygame.mouse.get_pos():
-            menu.hover(pygame.mouse.get_pos())
-            prev_mouse_pos = pygame.mouse.get_pos()
+        menu.refresh(pygame.mouse.get_pos())
+        prev_mouse_pos = pygame.mouse.get_pos()
             
     elif screen_location == 1:
+        game.refresh(pygame.mouse.get_pos())
         main_display.blit(game.surface, (0, 0))
-        if prev_mouse_pos != pygame.mouse.get_pos():
-            game.hover(pygame.mouse.get_pos())
-            prev_mouse_pos = pygame.mouse.get_pos()
 
     pygame.display.update()
     fps_clock.tick(500)

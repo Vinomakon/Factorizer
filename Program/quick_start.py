@@ -4,6 +4,7 @@ import win32api
 import win32con
 import win32gui
 
+
 class QuickStart:
     def __init__(self):
         os.environ["SDL_VIDEO_CENTERED"] = "1"
@@ -11,9 +12,10 @@ class QuickStart:
 
         quick_screen = pygame.display.set_mode((400, 400), flags=pygame.NOFRAME, depth=32, vsync=True)
 
-        logo = pygame.image.load("Logo@4x.png").convert_alpha()
+        logo = pygame.image.load("images/logo.png").convert_alpha()
         logo_size = logo.get_size()
         logo = pygame.transform.scale(logo, (logo_size[0] / 4, logo_size[1] / 4))
+
         # Make an invisible window // https://www.geeksforgeeks.org/how-to-make-a-fully-transparent-window-with-pygame/
         hwnd = pygame.display.get_wm_info()["window"]
         win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE,

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 225.65 128.94">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        stroke-width: 0px;
+      }
+
+      .cls-1, .cls-3 {
+        fill: #4d4d4d;
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        font-family: BebasNeue-Regular, 'Bebas Neue';
+        font-size: 45.61px;
+        stroke: #4d4d4d;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <g>
+      <rect class="cls-2" x="3" y="3" width="219.65" height="122.94" rx="40.16" ry="40.16"/>
+      <path class="cls-1" d="m182.49,6c20.49,0,37.16,16.67,37.16,37.16v42.62c0,20.49-16.67,37.16-37.16,37.16H43.16c-20.49,0-37.16-16.67-37.16-37.16v-42.62C6,22.67,22.67,6,43.16,6h139.33m0-6H43.16C19.32,0,0,19.32,0,43.16v42.62c0,23.84,19.32,43.16,43.16,43.16h139.33c23.84,0,43.16-19.32,43.16-43.16v-42.62c0-23.84-19.32-43.16-43.16-43.16h0Z"/>
+    </g>
+    <text class="cls-3" transform="translate(62.73 51.21) scale(1.02 1)"><tspan x="0" y="0">Delete</tspan></text>
+  </g>
+</svg>
