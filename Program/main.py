@@ -32,7 +32,7 @@ quick = quick_start.QuickStart()
 fps_clock = pygame.time.Clock()
 fps_count = 500
 
-screen_location = 0
+screen_location = 1
 #
 loader_time = time.time()
 while time.time() - loader_time <= 2:
