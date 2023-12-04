@@ -7,6 +7,7 @@ import fractions
 import main_menu
 import quick_start
 import game_test
+import shape
 
 os.environ["SDL_VIDEO_CENTERED"] = "1"
 
@@ -18,7 +19,8 @@ colors = {
     "cyan": (56, 235, 229),  # Cyan
     "magenta": (237, 55, 219),  # Magenta
     "yellow": (240, 240, 36),  # Yellow
-    "white": (255, 255, 255)  # White
+    "white": (255, 255, 255),  # White
+    "uncolored": (190, 190, 190) # Uncolored
 }
 
 screens = screeninfo.get_monitors()
@@ -33,11 +35,16 @@ fps_clock = pygame.time.Clock()
 fps_count = 500
 
 screen_location = 1
-#
+
+execute_duration = 0.5
+tick_duration = 0.5
+execute_time = time.time() + 0.4
+tick_time = time.time()
+
 loader_time = time.time()
-while time.time() - loader_time <= 2:
+while time.time() - loader_time <= 0.5:
     pass
-#
+
 menu = main_menu.MainScreen((canvas_w, canvas_h))
 game = game_test.Test((canvas_w, canvas_h))
 
@@ -57,11 +64,15 @@ while True:
                     sys.exit()
                 elif function == "start":
                     screen_location = 1
+                    execute_time = time.time()
+                    tick_time = time.time() + 0.4
         elif screen_location == 1:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 game.on_click(event.pos)
             elif event.type == pygame.MOUSEBUTTONUP:
                 game.on_release(event.pos)
+            elif event.type == pygame.KEYDOWN:
+                pass
 
     main_display.fill((100, 100, 100))
 
@@ -72,7 +83,15 @@ while True:
             
     elif screen_location == 1:
         game.refresh(pygame.mouse.get_pos())
-        main_display.blit(game.surface, (0, 0))
+        main_display.blit(pygame.transform.scale(game.surface, (canvas_w, canvas_h)), (0, 0))
+
+        if time.time() - execute_time >= execute_duration:
+            game.execute()
+            execute_time = time.time()
+        if time.time() - tick_time >= tick_duration:
+            game.tick()
+            tick_time = time.time()
+
 
     pygame.display.update()
     fps_clock.tick(500)

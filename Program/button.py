@@ -1,5 +1,4 @@
 import pygame
-import os
 
 colors = [(200, 200, 200), (150, 150, 150)]
 

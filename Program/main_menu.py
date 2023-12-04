@@ -8,7 +8,7 @@ class MainScreen:
         title_size = title.get_size()
         title = pygame.transform.scale(title,
                                        ((title_size[0] / 4) * (screen_size[0] / 2560),
-                                        (title_size[1] / 4) * (screen_size[1] / 1440)))
+                                        (title_size[1] / 4) * (screen_size[0] / 2560)))
         title_size = title.get_size()
         title_pos = (screen_size[0] / 2 - title_size[0] / 2, screen_size[1] / 5 - title_size[1] / 2)
         self.surface = pygame.surface.Surface(screen_size, pygame.SRCALPHA)
