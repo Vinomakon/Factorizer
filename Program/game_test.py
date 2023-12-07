@@ -11,14 +11,14 @@ class Test:
         self.functions = pygame.sprite.Group()
         self.constants = pygame.sprite.Group()
 
-        function = func_block.Function("rotate_ccw", (0, 0), "CyRcSyWc")
+        function = func_block.Function("rotate_ccw", (0, 0))
         self.functions.add(function)
-        function = func_block.Function("rotate_cw", (30, 30))
-        self.functions.add(function)
-        function = func_block.Function("rotate_ccw", (60, 60))
-        self.functions.add(function)
-        function = func_block.Function("rotate_ccw", (90, 90))
-        self.functions.add(function)
+        # function = func_block.Function("rotate_cw", (30, 30))
+        # self.functions.add(function)
+        # function = func_block.Function("rotate_ccw", (60, 60))
+        # self.functions.add(function)
+        # function = func_block.Function("rotate_ccw", (90, 90))
+        # self.functions.add(function)
 
         cons = constant.Constant((0, screen_size[1] / 2), "--Cu--Rr", False)
         self.constants.add(cons)
@@ -29,7 +29,6 @@ class Test:
 
         self.functions.draw(self.surface)
         self.connections = []
-        self.func_connections = []
         self.connecting = False
         self.connection1 = ()
         self.connection_type = None
@@ -108,10 +107,11 @@ class Test:
             self.op_func = None
             """
         op_done = False
-        check_connected = True
+        touched = 0
         for func in range(len(self.functions)):
             current_func = self.functions.sprites()[len(self.functions) - func - 1]
             if current_func.rect.collidepoint(mouse_pos) and not op_done:
+                touched += 1
                 on_dot, available, dot_pos, op_type, data_type,  op_func_dot = current_func.check(mouse_pos)
                 if on_dot:
                     op_done = True
@@ -131,17 +131,17 @@ class Test:
                         # Connect both of these dots and create connections between them.
                         if available and self.connection_type != op_type and self.data_type == data_type:
                             connection = (self.connection1, dot_pos) if op_type == 1 else (dot_pos, self.connection1)
-                            self.op_func_dot.connection = connection
-                            op_func_dot.connection = connection
+                            self.op_func_dot.connection_pos = connection
+                            op_func_dot.connection_pos = connection
                             self.connections.append(connection)
-                            self.func_connections.append((self.op_func_dot, op_func_dot) if op_type == 1 else (op_func_dot, self.op_func_dot))
-                            self.op_func_dot.connected = True
+                            self.op_func_dot.connected_dot = op_func_dot
+                            op_func_dot.connected_dot = self.op_func_dot
+                            self.connections.append(connection)
                             op_func_dot.connecting = True
+                            self.op_func_dot.connected = True
                             op_func_dot.connected = True
                             self.connecting = False
                         # Else: disable the active connecting and make the dot available again
-                        else:
-                            check_connected = False
 
                     # Put the used functions in front of the others
                     self.op_func = current_func
@@ -149,9 +149,13 @@ class Test:
                     self.functions.add(self.op_func)
                 # Else if not currently connecting: Remove all existing connections to this function
                 elif not self.connecting:
+                    self.op_func = current_func
+                    self.functions.remove(self.op_func)
+                    self.functions.add(self.op_func)
                     self.connecting = False
-                    del_connections = current_func.draggable(True, mouse_pos)
-                    if len(self.connections) != 0:
+                    current_func.draggable(True, mouse_pos)
+                    self.redo_connections()
+                    """if len(self.connections) != 0:
                         for con in del_connections:
                             if len(self.connections) != 0 and con != ():
                                 con_loc = self.connections.index(con)
@@ -161,17 +165,14 @@ class Test:
                                     dot.connection = ()
                                 self.func_connections.pop(con_loc)
                                 self.connections.pop(con_loc)
+                    """
                     op_done = True
-                    self.op_func = current_func
-                    self.functions.remove(self.op_func)
-                    self.functions.add(self.op_func)
-                else:
-                    check_connected = False
 
         for cons in range(len(self.constants)):
             current_cons = self.constants.sprites()[cons]
             on_dot, available, dot_pos, op_type, data_type, op_func_dot = current_cons.check(mouse_pos)
             if on_dot:
+                touched += 1
                 if not self.connecting:
                     # If nothing is being connected and the dot is available:
                     # Enable to be ready to connect to another dot.
@@ -182,36 +183,42 @@ class Test:
                         self.data_type = data_type
                         op_func_dot.connecting = True
                         self.op_func_dot = op_func_dot
-                    check_connected = True
                 elif self.connecting:
                     # If one dot is being connected, the dot is available,
                     # one is an input and the other an output and both are the same type:
                     # Connect both of these dots and create connections between them.
                     if available and self.connection_type != op_type and self.data_type == data_type:
                         connection = (self.connection1, dot_pos) if op_type == 1 else (dot_pos, self.connection1)
-                        self.op_func_dot.connection = connection
-                        op_func_dot.connection = connection
+                        self.op_func_dot.connection_pos = connection
+                        op_func_dot.connection_pos = connection
                         self.connections.append(connection)
-                        self.func_connections.append(
-                            (self.op_func_dot, op_func_dot) if op_type == 1 else (op_func_dot, self.op_func_dot))
+                        self.op_func_dot.connected_dot = op_func_dot
+                        op_func_dot.connected_dot = self.op_func_dot
+                        op_func_dot.connecting = False
+                        self.op_func_dot.connecting = False
                         self.op_func_dot.connected = True
-                        op_func_dot.connecting = True
                         op_func_dot.connected = True
                         self.connecting = False
-                        check_connected = True
-                    # Else: disable the active connecting and make the dot available again
-                    else:
-                        check_connected = False
+                    # Else: disable the active connection and make the dot available again
 
-        if not check_connected:
+        if touched == 0:
                 self.connecting = False
                 self.connection1 = ()
                 if self.op_func_dot is not None:
                     self.op_func_dot.connecting = False
                     self.op_func_dot.connected = False
-                    self.op_func_dot.connection = ()
                 self.op_func_dot = None
                 self.op_func = None
+
+    def redo_connections(self):
+        self.connections.clear()
+        for func in self.functions:
+            for out in func.outputs:
+                if out.connection_pos != ():
+                    self.connections.append(out.connection_pos)
+        for cons in self.constants:
+            if cons.dot.connection_pos != ():
+                self.connections.append(cons.dot.connection_pos)
 
     def on_release(self, mouse_pos):
         for self.op_func in self.functions:
@@ -230,8 +237,8 @@ class Test:
     def tick(self):
         for func in self.functions:
             func.send_data()
-        for con in self.func_connections:
-            con[1].data = con[0].data
+        for cons in self.constants:
+            cons.send_data()
         for func in self.functions:
             func.receive_data()
 

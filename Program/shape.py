@@ -29,7 +29,10 @@ class Shape:
                                [(shape_size / 2 - shape_size / 4, shape_size / 2 - shape_size / 4), (shape_size / 2, shape_size / 2 - shape_size / 4), (shape_size / 2, shape_size / 2), (shape_size / 2 - shape_size / 4, shape_size / 2)]]
 
         self.layer_size = [(shape_size / 2, shape_size / 2), (shape_size / 3, shape_size / 3), (shape_size / 4, shape_size / 4)]
-        self.update(self.shape)
+        if self.shape is not None:
+            self.update(self.shape)
+        else:
+            self.update("--------")
 
     def update(self, shape):
         self.shape = shape

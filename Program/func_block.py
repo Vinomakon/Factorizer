@@ -1,5 +1,6 @@
-import shape
 import pygame
+import shape
+import dot
 
 images = {"delete": ["delete.png", [0], []],
           "cut": ["cut.png", [0], [0, 0]],
@@ -12,48 +13,8 @@ images = {"delete": ["delete.png", [0], []],
 
 path = "images/"
 
-
-class Dot(pygame.sprite.Sprite):
-    def __init__(self, type, config, func_size, pos, input=True):
-        pygame.sprite.Sprite.__init__(self)
-        self.config = config
-        self.func_size = func_size
-        self.type = type
-        self.inputs = input
-        self.connecting = False
-        self.connected = False
-        self.connection = ()
-        
-        self.data = None
-
-        if type == 0:
-            self.image = pygame.image.load("images/dot.png").convert_alpha()
-            self.image = pygame.transform.scale(self.image, (20, self.image.get_size()[1] * (20 / self.image.get_size()[0])))
-            self.rect = self.image.get_rect()
-            self.rect.center = (10, 10)
-            self.loc_rect = self.image.get_rect()
-            self.loc_rect.center = (10, 10)
-        else:
-            self.image = pygame.image.load("images/sdot.png").convert_alpha()
-            self.image = pygame.transform.scale(self.image, (20, self.image.get_size()[1] * (20 / self.image.get_size()[0])))
-            self.rect = self.image.get_rect()
-            self.rect.center = (10, 10)
-            self.loc_rect = self.image.get_rect()
-            self.loc_rect.center = (10, 10)
-
-        self.rect.x = 20 if input else func_size[0] - 40
-        self.rect.y = func_size[1] / 2 - 10 + config
-        self.loc_rect.x = (20 if input else func_size[0] - 40) + pos[0]
-        self.loc_rect.y = func_size[1] / 2 - 10 + config + pos[1]
-
-    def update(self, pos):
-        self.loc_rect.x = (20 if self.inputs else self.func_size[0] - 40) + pos[0]
-        self.loc_rect.y = (self.func_size[1] / 2 - 10) + self.config + pos[1]
-        self.rect.center = (10 + (20 if self.inputs else self.func_size[0] - 40) + pos[0], 10 + (self.func_size[1] / 2 - 10) + self.config + pos[1])
-
-
 class Function(pygame.sprite.Sprite):
-    def __init__(self, func_type, pos=(0, 0), start_shape="--------"):
+    def __init__(self, func_type, pos=(0, 0)):
         pygame.sprite.Sprite.__init__(self)
         self.function = func_type
         self.spawn_pos = pos
@@ -71,29 +32,31 @@ class Function(pygame.sprite.Sprite):
 
         self.out1_data = None
         self.out2_data = None
-        self.in1_data = start_shape
+        self.in1_data = None
         self.in2_data = None
+
+        self.allow_execute = False
 
         self.display_shape = shape.Shape(self.in1_data)
 
         self.image.blit(self.func_image, (0, 0))
-        self.image.blit(pygame.transform.scale(self.display_shape.surface, (40, 40)), (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2))
+        self.image.blit(pygame.transform.scale(self.display_shape.surface, (40, 40)), (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2 - 10))
 
         for inp in range(len(images[func_type][1])):
             if images[func_type][1][inp] == 1:
-                dot1 = Dot(1, (20 if len(images[func_type][1]) > 1 else 0) * ((-1) ** inp), self.rect.size, pos, True)
+                dot1 = dot.Dot(1, (20 if len(images[func_type][1]) > 1 else 0) * ((-1) ** inp), self.rect.size, pos, True)
                 self.inputs.add(dot1)
             if images[func_type][1][inp] == 0:
-                dot2 = Dot(0, (20 if len(images[func_type][1]) > 1 else 0) * ((-1) ** inp), self.rect.size, pos, True)
+                dot2 = dot.Dot(0, (20 if len(images[func_type][1]) > 1 else 0) * ((-1) ** inp), self.rect.size, pos, True)
                 self.inputs.add(dot2)
         self.inputs.draw(self.image)
 
         for inp in range(len(images[func_type][2])):
             if images[func_type][2][inp] == 1:
-                dot3 = Dot(1, (20 if len(images[func_type][2]) > 1 else 0) * ((-1) ** inp), self.rect.size, pos, False)
+                dot3 = dot.Dot(1, (20 if len(images[func_type][2]) > 1 else 0) * ((-1) ** inp), self.rect.size, pos, False)
                 self.outputs.add(dot3)
             if images[func_type][2][inp] == 0:
-                dot4 = Dot(0, (20 if len(images[func_type][2]) > 1 else 0) * ((-1) ** inp), self.rect.size, pos, False)
+                dot4 = dot.Dot(0, (20 if len(images[func_type][2]) > 1 else 0) * ((-1) ** inp), self.rect.size, pos, False)
                 self.outputs.add(dot4)
         self.outputs.draw(self.image)
 
@@ -145,18 +108,16 @@ class Function(pygame.sprite.Sprite):
         self.dragging = state
         if state:
             self.start_drag = mouse_pos
-            re_pos = []
             for inp in self.inputs:
-                re_pos.append(inp.connection)
+                inp.del_connection()
                 inp.data = None
             for out in self.outputs:
-                re_pos.append(out.connection)
+                out.del_connection()
                 out.data = None
             self.out1_data = None
             self.out2_data = None
             self.in1_data = None
             self.in2_data = None
-            return re_pos
         else:
             self.init_pos = (self.rect.x, self.rect.y)
             self.inputs.update((self.rect.x, self.rect.y))
@@ -168,15 +129,57 @@ class Function(pygame.sprite.Sprite):
             self.rect.y = self.init_pos[1] - self.start_drag[1] + mouse_pos[1]
 
     def receive_data(self):
-        if (self.out1_data is None) or (len(self.outputs.sprites()) != 0 and self.outputs.sprites()[0].connected) or self.function == "delete":
-            if self.function == "rotate_cw":
+        all_sent = True
+        update_image = False
+        for out in self.outputs:
+            all_sent = all_sent and out.sent
+        if self.function == "rotate_cw" or self.function == "rotate_ccw" or self.function == "rotate_full":
+            if self.in1_data is None:
                 self.in1_data = self.inputs.sprites()[0].data
-            elif self.function == "rotate_ccw":
+                self.inputs.sprites()[0].data = None
+            if self.inputs.sprites()[0].data is None and self.in1_data is not None:
+                self.allow_execute = True
+                self.image.fill((255, 255, 0),
+                                (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2, 40, 40))
+            else:
+                self.allow_execute = False
+                self.image.fill((1, 1, 1),
+                            (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2, 40, 40))
+            if self.outputs.sprites()[0].connected_dot is not None and self.in1_data is not None:
+                all_sent = all_sent or self.outputs.sprites()[0].connected_dot.full
+
+        if not all_sent:
+            self.image.fill((255, 0, 0),
+                            (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2, 20, 40))
+            self.allow_execute = False
+            for inp in self.inputs:
+                inp.full = True
+        else:
+            self.image.fill((0, 255, 0),
+                            (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2, 20, 40))
+            self.allow_execute = self.allow_execute and True
+            update_image = self.allow_execute and True
+            for inp in self.inputs:
+                inp.full = False
+            for out in self.outputs:
+                out.sent = False
+
+        if update_image:
+            self.image.fill((200, 200, 200),
+                            (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2, 40, 40))
+            self.display_shape.update(self.in1_data)
+            self.image.blit(pygame.transform.scale(self.display_shape.surface, (40, 40)),
+                            (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2))
+
+        """if (self.out1_data is None) or (len(self.outputs.sprites()) != 0 and self.outputs.sprites()[0].connected) or self.function == "delete":
+            if self.function == "rotate_cw" or "rotate_ccw" or "rotate_full" or "delete":
                 self.in1_data = self.inputs.sprites()[0].data
-            elif self.function == "rotate_full":
-                self.in1_data = self.inputs.sprites()[0].data
-            elif self.function == "delete":
-                self.in1_data = self.inputs.sprites()[0].data
+                for inp in self.inputs:
+                    inp.full = False
+        else:
+            for inp in self.inputs:
+                inp.full = True
+
         if (self.in1_data is not None) or (
                 len(self.outputs.sprites()) != 0 and self.outputs.sprites()[0].connected):
             self.image.fill((200, 200, 200),
@@ -196,22 +199,13 @@ class Function(pygame.sprite.Sprite):
                 self.display_shape.update(self.out1_data)
                 self.image.blit(pygame.transform.scale(self.display_shape.surface, (40, 40)),
                                 (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2))
+                                """
     
     def send_data(self):
-        if self.function == "rotate_cw":
+        if self.function == "rotate_cw" or self.function == "rotate_ccw" or self.function == "rotate_full":
             if self.outputs.sprites()[0].connected:
-                self.outputs.sprites()[0].data = self.out1_data
+                self.outputs.sprites()[0].send_data(self.out1_data)
                 self.out1_data = None
-        elif self.function == "rotate_ccw":
-            if self.outputs.sprites()[0].connected:
-                self.outputs.sprites()[0].data = self.out1_data
-                self.out1_data = None
-        elif self.function == "rotate_full":
-            if self.outputs.sprites()[0].connected:
-                self.outputs.sprites()[0].data = self.out1_data
-                self.out1_data = None
-        for inp in self.inputs:
-            inp.data = None
     
     def execute(self):
         # Defines execution
@@ -220,6 +214,7 @@ class Function(pygame.sprite.Sprite):
         for out in self.outputs:
             out.data = None
         if self.in1_data is not None:
+            print()
             self.out1_data = self.in1_data
             self.in1_data = None
             if self.function == "rotate_cw":
@@ -237,10 +232,6 @@ class Function(pygame.sprite.Sprite):
             elif self.in2_data is not None:
                 pass
         self.image.fill((255, 255, 255), (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2, 40, 40))
-        if isinstance(self.out1_data, str) and len(self.out1_data) == 8:
-            self.display_shape.update(self.out1_data)
-            self.image.blit(pygame.transform.scale(self.display_shape.surface, (40, 40)),
-                        (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2))
 
     def rotate_cw(self):
         temp_layer = ""
@@ -292,3 +283,4 @@ class Function(pygame.sprite.Sprite):
 
     def delete(self):
         self.out1_data = "--------"
+        print("deleted")
