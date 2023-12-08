@@ -34,11 +34,10 @@ quick = quick_start.QuickStart()
 fps_clock = pygame.time.Clock()
 fps_count = 500
 
-screen_location = 1
+screen_location = 0
 
-execute_duration = 0.5
-tick_duration = 0.5
-execute_time = time.time() + 0.4
+tick = 0
+tick_duration = 0.25
 tick_time = time.time()
 
 loader_time = time.time()
@@ -85,13 +84,14 @@ while True:
         game.refresh(pygame.mouse.get_pos())
         main_display.blit(pygame.transform.scale(game.surface, (canvas_w, canvas_h)), (0, 0))
 
-        if time.time() - execute_time >= execute_duration:
-            game.execute()
-            execute_time = time.time()
         if time.time() - tick_time >= tick_duration:
-            game.tick()
+            if tick == 0:
+                game.tick()
+                tick = 1
+            else:
+                game.execute()
+                tick = 0
             tick_time = time.time()
-
 
     pygame.display.update()
     fps_clock.tick(500)

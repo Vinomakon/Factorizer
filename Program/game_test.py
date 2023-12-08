@@ -11,12 +11,14 @@ class Test:
         self.functions = pygame.sprite.Group()
         self.constants = pygame.sprite.Group()
 
+        self.complete = False
+
         function = func_block.Function("rotate_ccw", (0, 0))
         self.functions.add(function)
-        # function = func_block.Function("rotate_cw", (30, 30))
-        # self.functions.add(function)
-        # function = func_block.Function("rotate_ccw", (60, 60))
-        # self.functions.add(function)
+        function = func_block.Function("rotate_cw", (30, 30))
+        self.functions.add(function)
+        function = func_block.Function("rotate_ccw", (60, 60))
+        self.functions.add(function)
         # function = func_block.Function("rotate_ccw", (90, 90))
         # self.functions.add(function)
 
@@ -24,6 +26,8 @@ class Test:
         self.constants.add(cons)
         function1 = func_block.Function("delete", (200, 200))
         self.functions.add(function1)
+        self.goal = constant.Constant((screen_size[0] - 150, screen_size[1] / 2), "--Rr--Cu", True)
+        self.constants.add(self.goal)
         # function2 = func_block.Function("delete", (50, 50))
         # self.functions.add(function2)
 
@@ -225,14 +229,18 @@ class Test:
             self.op_func.draggable(False, mouse_pos)
 
     def refresh(self, mouse_pos):
-        self.surface.fill((100, 100, 100))
-        self.functions.update(mouse_pos)
-        self.functions.draw(self.surface)
-        self.constants.draw(self.surface)
-        for connection in self.connections:
-            pygame.draw.line(self.surface, (77, 0, 0),  connection[0], connection[1], 8)
-        if self.connecting:
-            pygame.draw.line(self.surface, (77, 0, 0), self.connection1, mouse_pos, 8)
+        if self.complete:
+            self.surface.fill((255, 0, 0))
+        else:
+            self.surface.fill((100, 100, 100))
+            self.functions.update(mouse_pos)
+            self.functions.draw(self.surface)
+            self.constants.draw(self.surface)
+            self.surface.blit(self.goal.image, self.goal.rect)
+            for connection in self.connections:
+                pygame.draw.line(self.surface, (77, 0, 0), connection[0], connection[1], 8)
+            if self.connecting:
+                pygame.draw.line(self.surface, (77, 0, 0), self.connection1, mouse_pos, 8)
 
     def tick(self):
         for func in self.functions:
@@ -241,7 +249,11 @@ class Test:
             cons.send_data()
         for func in self.functions:
             func.receive_data()
+        if self.goal.check_data():
+            self.complete = True
 
     def execute(self):
         for func in self.functions:
             func.execute()
+
+

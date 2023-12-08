@@ -52,6 +52,7 @@ class Dot(pygame.sprite.Sprite):
         return False
 
     def del_connection(self):
+        print("connection Severed")
         if self.connected_dot is not None:
             self.connected_dot.connected = False
             self.connected_dot.connecting = False
