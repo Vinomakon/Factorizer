@@ -26,7 +26,7 @@ class Constant(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (75, 75)
         self.rect.x = pos[0]
-        self.rect.y = pos[1]
+        self.rect.y = pos[1] - self.l_image.get_size()[1] / 2
         self.rect_pos = (self.rect.x + self.rect.width - 34 if not inp else self.rect.x + 14, self.rect.y + self.rect.height / 2)
         if isinstance(data, str):
             self.display = shape.Shape(data)

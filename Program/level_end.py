@@ -7,7 +7,7 @@ font = f"fonts/Bebas-Regular.ttf"
 
 
 class LevelEnd:
-    def __init__(self, screen_size):
+    def __init__(self, screen_size, level):
         title = pygame.image.load("images/complete.png").convert_alpha()
         title_size = title.get_size()
         title = pygame.transform.scale(title,
@@ -19,10 +19,10 @@ class LevelEnd:
         self.surface.fill(pygame.Color(0, 0, 0, 100))
         self.surface.blit(title, (title_pos[0], title_pos[1]))
 
-        start_button = button.Button((700, 150), (screen_size[0] / 2, screen_size[1] / 2), "Restart", "restart")
+        restart_button = button.Button((700, 150), (screen_size[0] / 2, screen_size[1] / 2), "Restart", "restart")
         exit_button = button.Button((250, 75), (screen_size[0] / 2, screen_size[1] / 1.1), "Menu", "menu")
         self.buttons = pygame.sprite.Group()
-        self.buttons.add(start_button, exit_button)
+        self.buttons.add(restart_button, exit_button)
         self.buttons.draw(self.surface)
 
     def on_click(self, click_pos):

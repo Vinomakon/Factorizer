@@ -25,8 +25,8 @@ class Function(pygame.sprite.Sprite):
 
         self.image = pygame.surface.Surface(self.func_image.get_size(), pygame.SRCALPHA)
         self.rect = self.image.get_rect()
-        self.rect.x = pos[0]
-        self.rect.y = pos[1]
+        self.rect.x = pos[0] - self.func_image.get_size()[0] / 2
+        self.rect.y = pos[1] - self.func_image.get_size()[1] / 2
 
         self.inputs = pygame.sprite.Group()
         self.outputs = pygame.sprite.Group()
@@ -111,7 +111,6 @@ class Function(pygame.sprite.Sprite):
                 from_dot = out
         return on_dot, available, dot_pos, op_type, data_type, from_dot
 
-
     def draggable(self, state, mouse_pos):
         self.dragging = state
         if state:
@@ -130,6 +129,12 @@ class Function(pygame.sprite.Sprite):
             self.init_pos = (self.rect.x, self.rect.y)
             self.inputs.update((self.rect.x, self.rect.y))
             self.outputs.update((self.rect.x, self.rect.y))
+
+    def deletion(self):
+        for inp in self.inputs:
+            inp.del_connection()
+        for out in self.outputs:
+            out.del_connection()
 
     def update(self, mouse_pos):
         if self.dragging:
@@ -156,7 +161,6 @@ class Function(pygame.sprite.Sprite):
             if self.can_send[0] and self.can_send[1]:
                 self.full = False
                 inp.full = False
-
 
     def receive_data(self):
         for inp in self.inputs:

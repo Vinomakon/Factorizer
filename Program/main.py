@@ -8,6 +8,7 @@ import main_menu
 import quick_start
 import game_test
 import level_end
+import level_menu
 
 os.environ["SDL_VIDEO_CENTERED"] = "1"
 
@@ -41,7 +42,7 @@ screen_location = 0
 
 quick = quick_start.QuickStart()
 loader_time = time.time()
-while time.time() - loader_time <= 0.5:
+while time.time() - loader_time <= 1:
     pass
 
 tick = 0
@@ -50,6 +51,8 @@ tick_time = time.time()
 
 menu = main_menu.MainScreen((canvas_w, canvas_h))
 game = game_test.Test((canvas_w, canvas_h))
+menu_screen = level_menu.LevelMenu((canvas_w, canvas_h))
+on_menu = False
 level_screen = None
 goal_reached = False
 
@@ -57,7 +60,7 @@ main_display = pygame.display.set_mode((canvas_w, canvas_h), flags=pygame.FULLSC
 
 while True:
     for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+        if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
 
@@ -73,23 +76,50 @@ while True:
                     tick_time = time.time() + 0.4
 
         elif screen_location == 1:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if goal_reached:
-                    function = level_screen.on_click(event.pos)
-                    if function == "menu":
-                        screen_location = 0
-                        goal_reached = False
-                    elif function == "restart":
-                        game = game_test.Test((canvas_w, canvas_h))
-                        execute_time = time.time()
-                        tick_time = time.time() + 0.4
-                        goal_reached = False
-                else:
-                    game.on_click(event.pos)
-            elif event.type == pygame.MOUSEBUTTONUP:
-                game.on_release(event.pos)
-            elif event.type == pygame.KEYDOWN:
-                pass
+            if goal_reached:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if pygame.mouse.get_pressed()[0]:
+                        function = level_screen.on_click(event.pos)
+                        if function == "menu":
+                            screen_location = 0
+                            goal_reached = False
+                            game = game_test.Test((canvas_w, canvas_h))
+                        elif function == "restart":
+                            execute_time = time.time()
+                            tick_time = time.time() + 0.4
+                            goal_reached = False
+                            game = game_test.Test((canvas_w, canvas_h))
+            elif on_menu:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if pygame.mouse.get_pressed()[0]:
+                        function = menu_screen.on_click(event.pos)
+                        if function == "menu":
+                            on_menu = False
+                            screen_location = 0
+                            game = game_test.Test((canvas_w, canvas_h))
+                        elif function == "back":
+                            on_menu = False
+                        elif function == "restart":
+                            on_menu = False
+                            execute_time = time.time()
+                            tick_time = time.time() + 0.4
+                            game = game_test.Test((canvas_w, canvas_h))
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        on_menu = not on_menu
+            else:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if pygame.mouse.get_pressed()[0]:
+                        game.on_click(event.pos)
+                    elif pygame.mouse.get_pressed()[2]:
+                        game.delete_func(event.pos)
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    game.on_release(event.pos)
+                elif event.type == pygame.KEYDOWN:
+                    if 49 <= event.key <= 57:
+                        game.spawn(event.key - 49, pygame.mouse.get_pos())
+                    if event.key == pygame.K_ESCAPE:
+                        on_menu = not on_menu
 
     main_display.fill((100, 100, 100))
 
@@ -104,6 +134,10 @@ while True:
             main_display.blit(pygame.transform.scale(game.surface, (canvas_w, canvas_h)), (0, 0))
             level_screen.refresh(pygame.mouse.get_pos())
             main_display.blit(level_screen.surface, (0, 0))
+        elif on_menu:
+            main_display.blit(pygame.transform.scale(game.surface, (canvas_w, canvas_h)), (0, 0))
+            menu_screen.refresh(pygame.mouse.get_pos())
+            main_display.blit(menu_screen.surface, (0, 0))
         else:
             game.refresh(pygame.mouse.get_pos())
             main_display.blit(pygame.transform.scale(game.surface, (canvas_w, canvas_h)), (0, 0))
@@ -111,13 +145,12 @@ while True:
                 if tick == 0:
                     goal_reached, level, quality = game.tick()
                     if goal_reached:
-                        level_screen = level_end.LevelEnd((canvas_w, canvas_h))
+                        level_screen = level_end.LevelEnd((canvas_w, canvas_h), 0)
                     tick = 1
                 else:
                     game.execute()
                     tick = 0
                 tick_time = time.time()
 
-
     pygame.display.update()
-    fps_clock.tick(500)
+    fps_clock.tick(fps_count)
