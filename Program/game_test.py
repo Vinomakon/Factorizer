@@ -26,7 +26,7 @@ class Test:
         self.constants.add(cons)
         function1 = func_block.Function("delete", (200, 200))
         self.functions.add(function1)
-        self.goal = constant.Constant((screen_size[0] - 150, screen_size[1] / 2), "--Rr--Cu", True)
+        self.goal = constant.Constant((screen_size[0] - 150, screen_size[1] / 2), "--Cu--Rr", True)
         self.constants.add(self.goal)
         # function2 = func_block.Function("delete", (50, 50))
         # self.functions.add(function2)
@@ -159,18 +159,8 @@ class Test:
                     self.connecting = False
                     current_func.draggable(True, mouse_pos)
                     self.redo_connections()
-                    """if len(self.connections) != 0:
-                        for con in del_connections:
-                            if len(self.connections) != 0 and con != ():
-                                con_loc = self.connections.index(con)
-                                for dot in self.func_connections[con_loc]:
-                                    dot.connected = False
-                                    dot.connecting = False
-                                    dot.connection = ()
-                                self.func_connections.pop(con_loc)
-                                self.connections.pop(con_loc)
-                    """
                     op_done = True
+
 
         for cons in range(len(self.constants)):
             current_cons = self.constants.sprites()[cons]
@@ -214,6 +204,8 @@ class Test:
                 self.op_func_dot = None
                 self.op_func = None
 
+        self.redo_connections()
+
     def redo_connections(self):
         self.connections.clear()
         for func in self.functions:
@@ -229,18 +221,18 @@ class Test:
             self.op_func.draggable(False, mouse_pos)
 
     def refresh(self, mouse_pos):
-        if self.complete:
-            self.surface.fill((255, 0, 0))
-        else:
-            self.surface.fill((100, 100, 100))
-            self.functions.update(mouse_pos)
-            self.functions.draw(self.surface)
-            self.constants.draw(self.surface)
-            self.surface.blit(self.goal.image, self.goal.rect)
-            for connection in self.connections:
-                pygame.draw.line(self.surface, (77, 0, 0), connection[0], connection[1], 8)
-            if self.connecting:
-                pygame.draw.line(self.surface, (77, 0, 0), self.connection1, mouse_pos, 8)
+        for func in self.functions:
+            func.check_surround()
+        self.surface.fill((100, 100, 100))
+        self.functions.update(mouse_pos)
+        self.functions.draw(self.surface)
+        self.constants.draw(self.surface)
+        self.surface.blit(self.goal.image, self.goal.rect)
+        for connection in self.connections:
+            pygame.draw.line(self.surface, (77, 0, 0), connection[0], connection[1], 8)
+        if self.connecting:
+            pygame.draw.line(self.surface, (77, 0, 0), self.connection1, mouse_pos, 8)
+
 
     def tick(self):
         for func in self.functions:
@@ -249,8 +241,10 @@ class Test:
             cons.send_data()
         for func in self.functions:
             func.receive_data()
-        if self.goal.check_data():
+        if self.goal.check_goal():
             self.complete = True
+        return self.complete, 0, 0
+
 
     def execute(self):
         for func in self.functions:

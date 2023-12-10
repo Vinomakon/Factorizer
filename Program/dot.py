@@ -16,6 +16,7 @@ class Dot(pygame.sprite.Sprite):
         self.connected_dot = None
         self.sent = False
         self.full = False
+        self.const = const
 
         self.data = None
 
@@ -47,17 +48,16 @@ class Dot(pygame.sprite.Sprite):
     def send_data(self, data):
         if self.connected and not self.connected_dot.full:
             self.connected_dot.data = data
-            self.sent = True
-            return True
+            self.data = None
+            return self.sent
         return False
 
     def del_connection(self):
-        print("connection Severed")
         if self.connected_dot is not None:
             self.connected_dot.connected = False
             self.connected_dot.connecting = False
             self.connected_dot.connection_pos = ()
-            self.connected_dot.connecting_dot = None
+            self.connected_dot.connected_dot = None
             self.connected_dot.sent = False
         self.connecting = False
         self.connected = False

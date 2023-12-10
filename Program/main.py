@@ -7,7 +7,7 @@ import fractions
 import main_menu
 import quick_start
 import game_test
-import shape
+import level_end
 
 os.environ["SDL_VIDEO_CENTERED"] = "1"
 
@@ -30,22 +30,28 @@ screen_ratio = list(format(fractions.Fraction(int(canvas_w), int(canvas_h))))
 screen_ratio.pop(1)
 
 pygame.init()
-quick = quick_start.QuickStart()
+icon = pygame.image.load("images/icon.png")
+pygame.display.set_icon(icon)
+pygame.display.set_caption("Factorizer")
+
 fps_clock = pygame.time.Clock()
 fps_count = 500
 
 screen_location = 0
 
-tick = 0
-tick_duration = 0.25
-tick_time = time.time()
-
+quick = quick_start.QuickStart()
 loader_time = time.time()
 while time.time() - loader_time <= 0.5:
     pass
 
+tick = 0
+tick_duration = 0.25
+tick_time = time.time()
+
 menu = main_menu.MainScreen((canvas_w, canvas_h))
 game = game_test.Test((canvas_w, canvas_h))
+level_screen = None
+goal_reached = False
 
 main_display = pygame.display.set_mode((canvas_w, canvas_h), flags=pygame.FULLSCREEN, depth=32, vsync=True)
 
@@ -65,9 +71,21 @@ while True:
                     screen_location = 1
                     execute_time = time.time()
                     tick_time = time.time() + 0.4
+
         elif screen_location == 1:
             if event.type == pygame.MOUSEBUTTONDOWN:
-                game.on_click(event.pos)
+                if goal_reached:
+                    function = level_screen.on_click(event.pos)
+                    if function == "menu":
+                        screen_location = 0
+                        goal_reached = False
+                    elif function == "restart":
+                        game = game_test.Test((canvas_w, canvas_h))
+                        execute_time = time.time()
+                        tick_time = time.time() + 0.4
+                        goal_reached = False
+                else:
+                    game.on_click(event.pos)
             elif event.type == pygame.MOUSEBUTTONUP:
                 game.on_release(event.pos)
             elif event.type == pygame.KEYDOWN:
@@ -76,22 +94,30 @@ while True:
     main_display.fill((100, 100, 100))
 
     if screen_location == 0:
-        main_display.blit(menu.surface, (0, 0))
         menu.refresh(pygame.mouse.get_pos())
+        main_display.blit(menu.surface, (0, 0))
         prev_mouse_pos = pygame.mouse.get_pos()
             
     elif screen_location == 1:
-        game.refresh(pygame.mouse.get_pos())
-        main_display.blit(pygame.transform.scale(game.surface, (canvas_w, canvas_h)), (0, 0))
 
-        if time.time() - tick_time >= tick_duration:
-            if tick == 0:
-                game.tick()
-                tick = 1
-            else:
-                game.execute()
-                tick = 0
-            tick_time = time.time()
+        if goal_reached:
+            main_display.blit(pygame.transform.scale(game.surface, (canvas_w, canvas_h)), (0, 0))
+            level_screen.refresh(pygame.mouse.get_pos())
+            main_display.blit(level_screen.surface, (0, 0))
+        else:
+            game.refresh(pygame.mouse.get_pos())
+            main_display.blit(pygame.transform.scale(game.surface, (canvas_w, canvas_h)), (0, 0))
+            if time.time() - tick_time >= tick_duration:
+                if tick == 0:
+                    goal_reached, level, quality = game.tick()
+                    if goal_reached:
+                        level_screen = level_end.LevelEnd((canvas_w, canvas_h))
+                    tick = 1
+                else:
+                    game.execute()
+                    tick = 0
+                tick_time = time.time()
+
 
     pygame.display.update()
     fps_clock.tick(500)

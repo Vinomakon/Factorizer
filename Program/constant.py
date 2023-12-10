@@ -31,7 +31,6 @@ class Constant(pygame.sprite.Sprite):
         if isinstance(data, str):
             self.display = shape.Shape(data)
             self.dot = dot.Dot(0, 0, self.rect.size, self.rect_pos, inp, const=True)
-            print(self.dot.inputs)
         else:
             self.dot = dot.Dot(1, 0, self.rect.size, self.rect_pos, inp, const=True)
 
@@ -49,7 +48,8 @@ class Constant(pygame.sprite.Sprite):
         from_dot = None
         if self.dot.loc_rect.collidepoint(mouse_pos):
             on_dot = True
-            available = not (self.dot.connecting or self.dot.connected)
+            available = True  # not (self.dot.connecting or self.dot.connected)
+            self.dot.del_connection()
             dot_pos = self.dot.loc_rect.center
             op_type = self.dot.inputs
             data_type = self.dot.type
@@ -57,10 +57,9 @@ class Constant(pygame.sprite.Sprite):
         return on_dot, available, dot_pos, op_type, data_type, from_dot
 
     def send_data(self):
-        self.dot.send_data(self.data)
+        if not self.inp:
+            self.dot.send_data(self.data)
 
-    def check_data(self):
+    def check_goal(self):
         if self.dot.data == self.goal:
             return True
-        else:
-            self.dot.data = None
