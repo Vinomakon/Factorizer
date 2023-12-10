@@ -4,6 +4,7 @@ import constant
 import spawner
 import level_menu
 import level_end
+import time
 
 functions = ["delete", "rotate_cw", "rotate_ccw", "rotate_full", "cut", "color", "paint", "merge"]
 
@@ -285,3 +286,79 @@ class Test:
                 func.deletion()
                 self.functions.remove(func)
                 self.redo_connections()
+
+    """
+    def start(self, main_display, fps):
+        fps_clock = pygame.time.Clock()
+        tick = 0
+        tick_duration = 0.25
+        tick_time = time.time()
+
+        menu_screen = level_menu.LevelMenu(self.screen_size)
+        level_screen = level_end.LevelEnd(self.screen_size)
+
+        function = None
+        on_menu = False
+
+        while True:
+            for event in pygame.event.get():
+                if self.complete:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if pygame.mouse.get_pressed()[0]:
+                            function = level_screen.on_click(event.pos)
+                            if function == "menu":
+                                return "menu"
+                            elif function == "restart":
+                                return "restart"
+                elif on_menu:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if pygame.mouse.get_pressed()[0]:
+                            function = menu_screen.on_click(event.pos)
+                            if function == "menu":
+                                return "menu"
+                            elif function == "back":
+                                on_menu = False
+                            elif function == "restart":
+                                return "restart"
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            on_menu = not on_menu
+                else:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if pygame.mouse.get_pressed()[0]:
+                            self.on_click(event.pos)
+                        elif pygame.mouse.get_pressed()[2]:
+                            self.delete_func(event.pos)
+                    elif event.type == pygame.MOUSEBUTTONUP:
+                        self.on_release(event.pos)
+                    elif event.type == pygame.KEYDOWN:
+                        if 49 <= event.key <= 57:
+                            self.spawn(event.key - 49, pygame.mouse.get_pos())
+                        if event.key == pygame.K_ESCAPE:
+                            on_menu = not on_menu
+
+            if self.complete:
+                main_display.blit(pygame.transform.scale(self.surface, self.screen_size, (0, 0)))
+                level_screen.refresh(pygame.mouse.get_pos())
+                main_display.blit(level_screen.surface, (0, 0))
+            elif on_menu:
+                main_display.blit(pygame.transform.scale(self.surface, self.screen_size), (0, 0))
+                menu_screen.refresh(pygame.mouse.get_pos())
+                main_display.blit(menu_screen.surface, (0, 0))
+            else:
+                self.refresh(pygame.mouse.get_pos())
+                main_display.blit(pygame.transform.scale(self.surface, self.screen_size), (0, 0))
+                if time.time() - tick_time >= tick_duration:
+                    if tick == 0:
+                        goal_reached, level, quality = self.tick()
+                        if goal_reached:
+                            level_screen = level_end.LevelEnd(self.screen_size, 0)
+                        tick = 1
+                    else:
+                        self.execute()
+                        tick = 0
+                    tick_time = time.time()
+
+            pygame.display.update()
+            fps_clock.tick(fps)
+    """

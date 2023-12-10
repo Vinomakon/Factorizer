@@ -27,6 +27,7 @@ colors = {
 screens = screeninfo.get_monitors()
 canvas_w = screens[0].width
 canvas_h = screens[0].height
+screen_size = (canvas_w, canvas_h)
 screen_ratio = list(format(fractions.Fraction(int(canvas_w), int(canvas_h))))
 screen_ratio.pop(1)
 
@@ -36,7 +37,7 @@ pygame.display.set_icon(icon)
 pygame.display.set_caption("Factorizer")
 
 fps_clock = pygame.time.Clock()
-fps_count = 500
+fps = 1000
 
 screen_location = 0
 
@@ -45,20 +46,37 @@ loader_time = time.time()
 while time.time() - loader_time <= 1:
     pass
 
+fps_clock = pygame.time.Clock()
 tick = 0
 tick_duration = 0.25
 tick_time = time.time()
 
-menu = main_menu.MainScreen((canvas_w, canvas_h))
-game = game_test.Test((canvas_w, canvas_h))
-menu_screen = level_menu.LevelMenu((canvas_w, canvas_h))
-on_menu = False
-level_screen = None
-goal_reached = False
+menu = main_menu.MainScreen(screen_size)
+game = game_test.Test(screen_size)
 
-main_display = pygame.display.set_mode((canvas_w, canvas_h), flags=pygame.FULLSCREEN, depth=32, vsync=True)
+menu_screen = level_menu.LevelMenu(screen_size)
+level_screen = level_end.LevelEnd(screen_size, 0)
+
+goal_reached = False
+on_menu = False
+
+main_display = pygame.display.set_mode(screen_size, flags=pygame.FULLSCREEN | pygame.HWSURFACE, depth=32, vsync=True)
+
+action = None
 
 while True:
+    """
+    if action is None or action == "menu":
+        action = menu.start(main_display, fps)
+    if action == "exit":
+        pygame.quit()
+        sys.exit()
+    elif action == "start":
+        action = game.start(main_display, fps)
+    elif action == "restart":
+        game = game_test.Test(screen_size)
+        action = game.start(main_display, fps)
+    """
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -83,12 +101,12 @@ while True:
                         if function == "menu":
                             screen_location = 0
                             goal_reached = False
-                            game = game_test.Test((canvas_w, canvas_h))
+                            game = game_test.Test(screen_size)
                         elif function == "restart":
                             execute_time = time.time()
                             tick_time = time.time() + 0.4
                             goal_reached = False
-                            game = game_test.Test((canvas_w, canvas_h))
+                            game = game_test.Test(screen_size)
             elif on_menu:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if pygame.mouse.get_pressed()[0]:
@@ -96,14 +114,14 @@ while True:
                         if function == "menu":
                             on_menu = False
                             screen_location = 0
-                            game = game_test.Test((canvas_w, canvas_h))
+                            game = game_test.Test(screen_size)
                         elif function == "back":
                             on_menu = False
                         elif function == "restart":
                             on_menu = False
                             execute_time = time.time()
                             tick_time = time.time() + 0.4
-                            game = game_test.Test((canvas_w, canvas_h))
+                            game = game_test.Test(screen_size)
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         on_menu = not on_menu
@@ -126,26 +144,25 @@ while True:
     if screen_location == 0:
         menu.refresh(pygame.mouse.get_pos())
         main_display.blit(menu.surface, (0, 0))
-        prev_mouse_pos = pygame.mouse.get_pos()
             
     elif screen_location == 1:
 
         if goal_reached:
-            main_display.blit(pygame.transform.scale(game.surface, (canvas_w, canvas_h)), (0, 0))
+            main_display.blit(pygame.transform.scale(game.surface, screen_size), (0, 0))
             level_screen.refresh(pygame.mouse.get_pos())
             main_display.blit(level_screen.surface, (0, 0))
         elif on_menu:
-            main_display.blit(pygame.transform.scale(game.surface, (canvas_w, canvas_h)), (0, 0))
+            main_display.blit(pygame.transform.scale(game.surface, screen_size), (0, 0))
             menu_screen.refresh(pygame.mouse.get_pos())
             main_display.blit(menu_screen.surface, (0, 0))
         else:
             game.refresh(pygame.mouse.get_pos())
-            main_display.blit(pygame.transform.scale(game.surface, (canvas_w, canvas_h)), (0, 0))
+            main_display.blit(pygame.transform.scale(game.surface, screen_size), (0, 0))
             if time.time() - tick_time >= tick_duration:
                 if tick == 0:
                     goal_reached, level, quality = game.tick()
                     if goal_reached:
-                        level_screen = level_end.LevelEnd((canvas_w, canvas_h), 0)
+                        level_screen = level_end.LevelEnd(screen_size, 0)
                     tick = 1
                 else:
                     game.execute()
@@ -153,4 +170,4 @@ while True:
                 tick_time = time.time()
 
     pygame.display.update()
-    fps_clock.tick(fps_count)
+    fps_clock.tick(fps)

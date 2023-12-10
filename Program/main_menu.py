@@ -1,6 +1,6 @@
 import pygame
 import button
-
+import time
 
 class MainScreen:
     def __init__(self, screen_size):
@@ -40,3 +40,22 @@ class MainScreen:
             else:
                 but.check(False)
             self.buttons.draw(self.surface)
+
+    """
+    def start(self, main_display, fps):
+        fps_clock = pygame.time.Clock()
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    function = self.on_click(event.pos)
+                    if function == "exit":
+                        return "exit"
+                    elif function == "start":
+                        return "start"
+
+            self.refresh(pygame.mouse.get_pos())
+            main_display.blit(self.surface, (0, 0))
+            pygame.display.update()
+            fps_clock.tick(fps)
+    """
