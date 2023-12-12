@@ -1,35 +1,41 @@
+import math
+
 import pygame
 import func_block
 import constant
+import spawner
+import asyncio
+
+functions = ["delete", "rotate_cw", "rotate_ccw", "rotate_full", "cut", "color", "paint", "merge"]
 
 
 class Test:
     def __init__(self, screen_size):
         self.surface = pygame.surface.Surface(screen_size)
         self.surface.fill((100, 100, 100))
+        self.background = pygame.image.load("images/background.png")
+        self.background = pygame.transform.scale(self.background, (2560, self.background.get_size()[1] / (self.background.get_size()[0] / 2560)))
+        self.background_rect = self.background.get_rect()
+
         self.screen_size = screen_size
         self.functions = pygame.sprite.Group()
         self.constants = pygame.sprite.Group()
 
         self.complete = False
 
-        function = func_block.Function("rotate_ccw", (0, 0))
-        self.functions.add(function)
-        function = func_block.Function("rotate_cw", (30, 30))
-        self.functions.add(function)
-        function = func_block.Function("rotate_ccw", (60, 60))
-        self.functions.add(function)
-        # function = func_block.Function("rotate_ccw", (90, 90))
-        # self.functions.add(function)
-
         cons = constant.Constant((0, screen_size[1] / 2), "--Cu--Rr", False)
         self.constants.add(cons)
-        function1 = func_block.Function("delete", (200, 200))
-        self.functions.add(function1)
+
         self.goal = constant.Constant((screen_size[0] - 150, screen_size[1] / 2), "--Rr--Cu", True)
         self.constants.add(self.goal)
-        # function2 = func_block.Function("delete", (50, 50))
-        # self.functions.add(function2)
+
+        self.spawner = spawner.Spawner(screen_size, [1, 1, 1, 1, 0, 0, 0, 0])
+        self.dragging = None
+
+        self.all_objects = pygame.sprite.Group()
+        for con in self.constants:
+            self.all_objects.add(cons)
+        self.all_objects.add(self.spawner)
 
         self.functions.draw(self.surface)
         self.connections = []
@@ -40,10 +46,14 @@ class Test:
         self.op_func_dot = None
         self.data_type = None
 
+        self.line_surface = pygame.surface.Surface(screen_size, pygame.SRCALPHA)
+
+        self.fps_test = 0
+
     def res_change(self, screen_size):
         self.surface = pygame.surface.Surface(screen_size, pygame.SRCALPHA)
 
-    def on_click(self, mouse_pos):
+    async def on_click(self, mouse_pos):
         self.surface = pygame.surface.Surface(self.screen_size, pygame.SRCALPHA)
         """
         connection_active = False
@@ -129,6 +139,9 @@ class Test:
                             self.data_type = data_type
                             op_func_dot.connecting = True
                             self.op_func_dot = op_func_dot
+
+                            self.redo_connections()
+                            return
                     elif self.connecting:
                         # If one dot is being connected, the dot is available,
                         # one is an input and the other an output and both are the same type:
@@ -145,6 +158,9 @@ class Test:
                             self.op_func_dot.connected = True
                             op_func_dot.connected = True
                             self.connecting = False
+
+                            self.redo_connections()
+                            return
                         # Else: disable the active connecting and make the dot available again
 
                     # Put the used functions in front of the others
@@ -158,19 +174,11 @@ class Test:
                     self.functions.add(self.op_func)
                     self.connecting = False
                     current_func.draggable(True, mouse_pos)
+                    self.functions.remove(current_func)
+                    self.dragging = current_func
+
                     self.redo_connections()
-                    """if len(self.connections) != 0:
-                        for con in del_connections:
-                            if len(self.connections) != 0 and con != ():
-                                con_loc = self.connections.index(con)
-                                for dot in self.func_connections[con_loc]:
-                                    dot.connected = False
-                                    dot.connecting = False
-                                    dot.connection = ()
-                                self.func_connections.pop(con_loc)
-                                self.connections.pop(con_loc)
-                    """
-                    op_done = True
+                    return
 
         for cons in range(len(self.constants)):
             current_cons = self.constants.sprites()[cons]
@@ -187,6 +195,9 @@ class Test:
                         self.data_type = data_type
                         op_func_dot.connecting = True
                         self.op_func_dot = op_func_dot
+
+                        self.redo_connections()
+                        return
                 elif self.connecting:
                     # If one dot is being connected, the dot is available,
                     # one is an input and the other an output and both are the same type:
@@ -203,16 +214,34 @@ class Test:
                         self.op_func_dot.connected = True
                         op_func_dot.connected = True
                         self.connecting = False
+
+                        self.redo_connections()
+                        return
                     # Else: disable the active connection and make the dot available again
 
-        if touched == 0:
-                self.connecting = False
-                self.connection1 = ()
-                if self.op_func_dot is not None:
-                    self.op_func_dot.connecting = False
-                    self.op_func_dot.connected = False
-                self.op_func_dot = None
-                self.op_func = None
+        func = self.spawner.check(mouse_pos)
+        if func is not None:
+            self.spawn(func, mouse_pos)
+
+        self.connecting = False
+        self.connection1 = ()
+        if self.op_func_dot is not None:
+            self.op_func_dot.connecting = False
+            self.op_func_dot.connected = False
+        self.op_func_dot = None
+        self.op_func = None
+
+        self.redo_connections()
+
+    async def on_release(self, mouse_pos):
+        if self.dragging:
+            if self.spawner.rect.colliderect(self.dragging):
+                self.functions.remove(self.dragging)
+                self.dragging = None
+            else:
+                self.dragging.draggable(False, mouse_pos)
+                self.functions.add(self.dragging)
+                self.dragging = None
 
     def redo_connections(self):
         self.connections.clear()
@@ -224,23 +253,28 @@ class Test:
             if cons.dot.connection_pos != ():
                 self.connections.append(cons.dot.connection_pos)
 
-    def on_release(self, mouse_pos):
-        for self.op_func in self.functions:
-            self.op_func.draggable(False, mouse_pos)
+    async def redo_objects(self, draggable=None):
+        self.all_objects.empty()
+        for con in self.constants:
+            self.all_objects.add(con)
+        for func in self.functions:
+            self.all_objects.add(func)
+        self.all_objects.add(self.spawner)
+        self.line_surface = pygame.surface.Surface(self.screen_size, pygame.SRCALPHA)
+        for connection in self.connections:
+            pygame.draw.line(self.line_surface, (77, 0, 0), connection[0], connection[1], 8)
 
-    def refresh(self, mouse_pos):
-        if self.complete:
-            self.surface.fill((255, 0, 0))
-        else:
-            self.surface.fill((100, 100, 100))
-            self.functions.update(mouse_pos)
-            self.functions.draw(self.surface)
-            self.constants.draw(self.surface)
-            self.surface.blit(self.goal.image, self.goal.rect)
-            for connection in self.connections:
-                pygame.draw.line(self.surface, (77, 0, 0), connection[0], connection[1], 8)
-            if self.connecting:
-                pygame.draw.line(self.surface, (77, 0, 0), self.connection1, mouse_pos, 8)
+    async def refresh(self, mouse_pos):
+        for func in self.functions:
+            func.check_surround()
+        self.surface.blit(self.background, self.background_rect)
+        self.all_objects.draw(self.surface)
+        self.surface.blit(self.line_surface, (0, 0))
+        if self.dragging:
+            self.dragging.update(mouse_pos)
+            self.surface.blit(self.dragging.image, self.dragging.rect)
+        if self.connecting:
+            pygame.draw.line(self.surface, (77, 0, 0), self.connection1, mouse_pos, 8)
 
     def tick(self):
         for func in self.functions:
@@ -249,11 +283,98 @@ class Test:
             cons.send_data()
         for func in self.functions:
             func.receive_data()
-        if self.goal.check_data():
+        if self.goal.check_goal():
             self.complete = True
+        return self.complete, 0, 0
 
     def execute(self):
         for func in self.functions:
             func.execute()
 
+    def spawn(self, func, mouse_pos):
+        function = func_block.Function(functions[func], mouse_pos)
+        function.draggable(True, (mouse_pos[0] + function.rect.w / 2, mouse_pos[1] + function.rect.h / 2))
+        self.dragging = function
 
+    def delete_func(self, mouse_pos):
+        for func in self.functions:
+            if func.rect.collidepoint(mouse_pos):
+                func.deletion()
+                self.functions.remove(func)
+                self.redo_connections()
+
+    """
+    def start(self, main_display, fps):
+        fps_clock = pygame.time.Clock()
+        tick = 0
+        tick_duration = 0.25
+        tick_time = time.time()
+
+        menu_screen = level_menu.LevelMenu(self.screen_size)
+        level_screen = level_end.LevelEnd(self.screen_size)
+
+        function = None
+        on_menu = False
+
+        while True:
+            for event in pygame.event.get():
+                if self.complete:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if pygame.mouse.get_pressed()[0]:
+                            function = level_screen.on_click(event.pos)
+                            if function == "menu":
+                                return "menu"
+                            elif function == "restart":
+                                return "restart"
+                elif on_menu:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if pygame.mouse.get_pressed()[0]:
+                            function = menu_screen.on_click(event.pos)
+                            if function == "menu":
+                                return "menu"
+                            elif function == "back":
+                                on_menu = False
+                            elif function == "restart":
+                                return "restart"
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            on_menu = not on_menu
+                else:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if pygame.mouse.get_pressed()[0]:
+                            self.on_click(event.pos)
+                        elif pygame.mouse.get_pressed()[2]:
+                            self.delete_func(event.pos)
+                    elif event.type == pygame.MOUSEBUTTONUP:
+                        self.on_release(event.pos)
+                    elif event.type == pygame.KEYDOWN:
+                        if 49 <= event.key <= 57:
+                            self.spawn(event.key - 49, pygame.mouse.get_pos())
+                        if event.key == pygame.K_ESCAPE:
+                            on_menu = not on_menu
+
+            if self.complete:
+                main_display.blit(pygame.transform.scale(self.surface, self.screen_size, (0, 0)))
+                level_screen.refresh(pygame.mouse.get_pos())
+                main_display.blit(level_screen.surface, (0, 0))
+            elif on_menu:
+                main_display.blit(pygame.transform.scale(self.surface, self.screen_size), (0, 0))
+                menu_screen.refresh(pygame.mouse.get_pos())
+                main_display.blit(menu_screen.surface, (0, 0))
+            else:
+                self.refresh(pygame.mouse.get_pos())
+                main_display.blit(pygame.transform.scale(self.surface, self.screen_size), (0, 0))
+                if time.time() - tick_time >= tick_duration:
+                    if tick == 0:
+                        goal_reached, level, quality = self.tick()
+                        if goal_reached:
+                            level_screen = level_end.LevelEnd(self.screen_size, 0)
+                        tick = 1
+                    else:
+                        self.execute()
+                        tick = 0
+                    tick_time = time.time()
+
+            pygame.display.update()
+            fps_clock.tick(fps)
+    """
