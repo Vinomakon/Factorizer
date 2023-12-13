@@ -3,6 +3,7 @@ import pygame
 path = "images/spawner/"
 functions = ["delete", "rotate_cw", "rotate_ccw", "rotate_full", "cut", "color", "paint", "merge"]
 
+
 class Func(pygame.sprite.Sprite):
     def __init__(self, func, ratio, bar_rect):
         pygame.sprite.Sprite.__init__(self)
