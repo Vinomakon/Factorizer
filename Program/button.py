@@ -29,7 +29,3 @@ class Button(pygame.sprite.Sprite):
             self.image.fill(colors[0])
         pygame.draw.rect(self.image, (10, 10, 10), (0, 0, self.rect.w, self.rect.h), 7)
         self.image.blit(self.text_render, self.text_rect)
-
-
-
-
