@@ -38,6 +38,7 @@ class Spawner(pygame.sprite.Sprite):
         for func in range(8):
             if allowance[func] == 1:
                 self.func_buttons.add(Func(screen_size, func, ratio, self.rect))
+        
         self.image.blit(self.bar, (0, 0))
         self.func_buttons.draw(self.image)
 
