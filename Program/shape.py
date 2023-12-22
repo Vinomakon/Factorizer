@@ -58,7 +58,7 @@ class Shape:
                     temp = pygame.transform.scale(temp, self.layer_size[layers.index(layer)])
                     self.surface.blit(temp, self.shape_position[layers.index(layer)][pair])
 
-"""
+        """
         self.shapes = []
         for shape in range(4):
             self.shapes.append(pygame.image.load("images/" + str(shape + 1) + ".png").convert_alpha())
@@ -76,7 +76,7 @@ class Shape:
                                                              (round((shape_size / 2) / ((layer + 2) / 2)),
                                                               round((shape_size / 2) / ((layer + 2) / 2)))).get_rect())
 """
-"""
+    """
     def rotate(self, rotate_angle):
             help_shapes_list = []
             for layer in range(len(self.layers)):

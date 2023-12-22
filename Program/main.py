@@ -39,7 +39,7 @@ pygame.display.set_caption("Factorizer")
 fps_clock = pygame.time.Clock()
 fps = 1000
 
-screen_location = 0
+screen_location = 1
 
 quick = quick_start.QuickStart()
 loader_time = time.time()

@@ -11,11 +11,11 @@ class Func(pygame.sprite.Sprite):
         self.image = pygame.image.load(f"{path}{functions[func]}.png").convert_alpha()
         self.image = pygame.transform.scale(self.image, (self.image.get_size()[0] * (ratio * (screen_size[0] / 2560)), self.image.get_size()[1] * (ratio * (screen_size[0] / 2560))))
         self.rect = self.image.get_rect()
-        self.rect.x = (18 + 36 * func + self.image.get_size()[0] * func) * (screen_size[0] / 2560)
-        self.rect.y = (bar_rect.h / 5.8) * (screen_size[0] / 2560)
+        self.rect.x = (15 + 7 * func + self.image.get_size()[0] * func) * (screen_size[0] / 2560)
+        self.rect.y = (bar_rect.h / 8) * (screen_size[0] / 2560)
         self.l_rect = self.image.get_rect()
-        self.l_rect.x = (18 + 36 * func + self.image.get_size()[0] * func) * (screen_size[0] / 2560) + bar_rect.x
-        self.l_rect.y = (bar_rect.h / 5.8) * (screen_size[0] / 2560) + bar_rect.y
+        self.l_rect.x = (15 + 7 * func + self.image.get_size()[0] * func) * (screen_size[0] / 2560) + bar_rect.x
+        self.l_rect.y = (bar_rect.h / 8) * (screen_size[0] / 2560) + bar_rect.y
 
 
 class Spawner(pygame.sprite.Sprite):

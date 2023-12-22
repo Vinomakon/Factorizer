@@ -49,7 +49,7 @@ class Dot(pygame.sprite.Sprite):
         if self.connected and not self.connected_dot.full:
             self.connected_dot.data = data
             self.data = None
-            return self.sent
+            return True
         return False
 
     def del_connection(self):

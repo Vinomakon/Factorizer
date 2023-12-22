@@ -22,13 +22,13 @@ class Test:
 
         self.complete = False
 
-        cons = constant.Constant((0, screen_size[1] / 2), "--Cu--Rr", False)
+        cons = constant.Constant((0, screen_size[1] / 2), "SyCuWcRr", False)
         self.constants.add(cons)
 
         self.goal = constant.Constant((screen_size[0] - 150, screen_size[1] / 2), "--Rr--Cu", True)
         self.constants.add(self.goal)
 
-        self.spawner = spawner.Spawner([1, 1, 1, 1, 0, 0, 0, 0])
+        self.spawner = spawner.Spawner(screen_size, [1, 1, 1, 1, 1, 1, 1, 1])
         self.dragging = None
 
         self.functions.draw(self.surface)
@@ -245,7 +245,7 @@ class Test:
 
     def refresh(self, mouse_pos):
         for func in self.functions:
-            func.check_surround()
+            func.update(mouse_pos)
         self.surface.blit(self.background, self.background_rect)
         self.functions.update(mouse_pos)
         self.functions.draw(self.surface)
