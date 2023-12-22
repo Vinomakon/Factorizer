@@ -160,7 +160,6 @@ while True:
             main_display.blit(menu_screen.surface, (0, 0))
         else:
             asyncio.run(game.refresh(pygame.mouse.get_pos()))
-            main_display.blit(pygame.transform.scale(game.surface, screen_size), (0, 0))
             if time.time() - tick_time >= tick_duration:
                 if tick == 0:
                     goal_reached, level, quality = game.tick()
@@ -171,6 +170,7 @@ while True:
                     game.execute()
                     tick = 0
                 tick_time = time.time()
+            main_display.blit(pygame.transform.scale(game.surface, screen_size), (0, 0))
 
     pygame.display.update()
     fps_clock.tick(fps)

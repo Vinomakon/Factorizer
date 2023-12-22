@@ -23,13 +23,13 @@ class Test:
 
         self.complete = False
 
-        cons = constant.Constant((0, screen_size[1] / 2), "--Cu--Rr", False)
+        cons = constant.Constant((0, screen_size[1] / 2), "SbCuCyRr", False)
         self.constants.add(cons)
 
         self.goal = constant.Constant((screen_size[0] - 150, screen_size[1] / 2), "--Rr--Cu", True)
         self.constants.add(self.goal)
 
-        self.spawner = spawner.Spawner(screen_size, [1, 1, 1, 1, 0, 0, 0, 0])
+        self.spawner = spawner.Spawner(screen_size, [1, 1, 1, 1, 1, 1, 1, 1])
         self.dragging = None
 
         self.all_objects = pygame.sprite.Group()
@@ -39,6 +39,7 @@ class Test:
 
         self.functions.draw(self.surface)
         self.connections = []
+        self.line_colors = [(77, 0, 0), (200, 0, 0)]
         self.connecting = False
         self.connection1 = ()
         self.connection_type = None
@@ -62,7 +63,6 @@ class Test:
         for func_num in range(len(self.functions)):
             self.op_func = self.functions.sprites()[len(self.functions) - func_num - 1]
             on_dot, dot_pos, dot_available, connect_type = self.op_func.check(mouse_pos)
-            print(self.connect_type, connect_type)
             if on_dot and not action_done:
                 if self.connecting and dot_available and not (self.connect_type == connect_type):
                     self.connections.append((self.connect1, dot_pos))
@@ -77,7 +77,6 @@ class Test:
                     connection_active = True
                     self.connecting = False
                     if self.connect1 is not None:
-                        print(self.connect1)
                         for out in self.op_func.output:
                             out.check(self.connect1 if connect_type == 0 else dot_pos, 0)
                         for inp in self.op_func.input:
@@ -253,7 +252,7 @@ class Test:
             if cons.dot.connection_pos != ():
                 self.connections.append(cons.dot.connection_pos)
 
-    async def redo_objects(self, draggable=None):
+    async def redo_objects(self, draggable=None, send=0):
         self.all_objects.empty()
         for con in self.constants:
             self.all_objects.add(con)
@@ -264,9 +263,9 @@ class Test:
         for connection in self.connections:
             pygame.draw.line(self.line_surface, (77, 0, 0), connection[0], connection[1], 8)
 
-    async def refresh(self, mouse_pos):
+    async def refresh(self, mouse_pos, send=0):
         for func in self.functions:
-            func.check_surround()
+            func.update(mouse_pos)
         self.surface.blit(self.background, self.background_rect)
         self.all_objects.draw(self.surface)
         self.surface.blit(self.line_surface, (0, 0))

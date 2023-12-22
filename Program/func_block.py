@@ -137,20 +137,16 @@ class Function(pygame.sprite.Sprite):
             out.del_connection()
 
     def update(self, mouse_pos):
-        if self.dragging:
-            self.rect.x = self.init_pos[0] - self.start_drag[0] + mouse_pos[0]
-            self.rect.y = self.init_pos[1] - self.start_drag[1] + mouse_pos[1]
-
-    def check_surround(self):
-        if self.function != "delete":
-            self.can_send = [False, False]
-        else:
+        if self.function == "delete":
             self.can_send = [True, True]
+        else:
+            self.can_send = [False, False]
+
         if self.function == "rotate_cw" or self.function == "rotate_ccw" or self.function == "rotate_full":
             if self.outputs.sprites()[0].sent:
                 self.outputs.sprites()[0].sent = False
             self.can_send[1] = True
-            if self.outputs.sprites()[0].connected_dot is not None and not self.outputs.sprites()[0].connected_dot.full:
+            if self.outputs.sprites()[0].connected_dot and not self.outputs.sprites()[0].connected_dot.full:
                 if not self.outputs.sprites()[0].sent:
                     self.can_send[0] = True
                 else:
@@ -158,10 +154,29 @@ class Function(pygame.sprite.Sprite):
             else:
                 self.can_send[0] = False
 
+        if self.function == "cut":
+            if self.outputs.sprites()[0].sent and self.outputs.sprites()[1].sent:
+                self.outputs.sprites()[0].sent, self.outputs.sprites()[1].sent = False, False
+            if self.outputs.sprites()[0].connected_dot and self.outputs.sprites()[1].connected_dot:
+                if not self.outputs.sprites()[0].connected_dot.full and not self.outputs.sprites()[0].sent:
+                    self.can_send[0] = True
+                else:
+                    self.can_send[0] = False
+
+                if not self.outputs.sprites()[1].connected_dot.full and not self.outputs.sprites()[1].sent:
+                    self.can_send[1] = True
+                else:
+                    self.can_send[1] = False
+
+
+
         if self.can_send[0] and self.can_send[1]:
             self.full = False
             for inp in self.inputs:
                 inp.full = False
+        if self.dragging:
+            self.rect.x = self.init_pos[0] - self.start_drag[0] + mouse_pos[0]
+            self.rect.y = self.init_pos[1] - self.start_drag[1] + mouse_pos[1]
 
     def receive_data(self):
         if not (self.can_send[0] and self.can_send[1]):
@@ -269,11 +284,19 @@ class Function(pygame.sprite.Sprite):
             if self.outputs.sprites()[0].connected and self.can_send[0]:
                 if self.outputs.sprites()[0].send_data(self.out1_data):
                     self.out1_data = None
-    
+        elif self.function == "cut":
+            if self.can_send[0] and self.can_send[1]:
+                if self.outputs.sprites()[0].connected:
+                    if self.outputs.sprites()[0].send_data(self.out1_data):
+                        self.out1_data = None
+                if self.outputs.sprites()[1].connected:
+                    if self.outputs.sprites()[1].send_data(self.out2_data):
+                        self.out2_data = None
+
     def execute(self):
         # Defines execution
         if not self.allow_execute:
-            if self.function == "rotate_cw" or self.function == "rotate_ccw" or self.function == "rotate_full":
+            if self.function == "rotate_cw" or self.function == "rotate_ccw" or self.function == "rotate_full" or self.function == "cut":
                 self.image.fill((255, 255, 255),
                                 (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2, 40, 40))
                 if self.out1_data:
@@ -285,77 +308,108 @@ class Function(pygame.sprite.Sprite):
             inp.data = None
         for out in self.outputs:
             out.data = None
-        if self.in1_data is not None:
-            self.out1_data = self.in1_data
-            self.in1_data = None
-            if self.function == "rotate_cw":
-                if self.out1_data is not None:
-                    self.rotate_cw()
-            elif self.function == "rotate_ccw":
-                if self.out1_data is not None:
-                    self.rotate_ccw()
-            elif self.function == "rotate_full":
-                if self.out1_data is not None:
-                    self.rotate_full()
-            elif self.function == "delete":
-                if self.out1_data is not None:
-                    self.delete()
-            elif self.in2_data is not None:
-                pass
-        self.image.fill((255, 255, 255),
-                        (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2, 40, 40))
-        if self.out1_data is not None:
-            self.display_shape.update(self.out1_data)
-            self.image.blit(pygame.transform.scale(self.display_shape.surface, (40, 40)),
-                            (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2))
 
-    def rotate_cw(self):
+        if self.function == "rotate_cw" or self.function == "rotate_ccw" or self.function == "rotate_full" or self.function == "cut" or self.function == "delete":
+            if self.in1_data is not None:
+                self.out1_data = self.in1_data
+                self.in1_data = None
+                if self.function == "rotate_cw":
+                    self.rotate_cw()
+                elif self.function == "rotate_ccw":
+                    self.rotate_ccw()
+                elif self.function == "rotate_full":
+                    self.rotate_full()
+                elif self.function == "cut":
+                    self.out2_data = ""
+                    self.cut()
+                elif self.function == "delete":
+                    self.delete()
+                elif self.in1_data is not None:
+                    pass
+            self.image.fill((255, 255, 255),
+                            (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2, 40, 40))
+            if self.out1_data is not None:
+                self.display_shape.update(self.out1_data)
+                self.image.blit(pygame.transform.scale(self.display_shape.surface, (40, 40)),
+                                (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2))
+
+        if self.function == "merge" or self.function == "paint" or self.function == "color":
+            if self.in1_data is not None and self.in2_data is not None:
+                self.out1_data = self.in1_data
+                self.in1_data = None
+                self.out2_data = self.in2_data
+                self.in2_data = None
+                if self.function == "merge":
+                    self.merge()
+                elif self.function == "paint":
+                    self.paint()
+                elif self.function == "color":
+                    self.color()
+                elif self.in2_data is not None:
+                    pass
+            self.image.fill((255, 255, 255),
+                            (self.func_image.get_size()[0] / 2 - 20, self.func_image.get_size()[1] / 2, 40, 40))
+
+    def decode_shape(self, shape1, shape2=None):
+        shapes = []
         temp_layer = ""
         layers = []
-        for letter in self.out1_data:
+        for letter in shape1:
             if letter == ":":
                 layers.append(temp_layer)
                 temp_layer = ""
             else:
                 temp_layer += letter
         layers.append(temp_layer)
+        shapes.append(layers)
+        if shape2 is not None:
+            temp_layer = ""
+            layers = []
+            for letter in shape2:
+                if letter == ":":
+                    layers.append(temp_layer)
+                    temp_layer = ""
+                else:
+                    temp_layer += letter
+            layers.append(temp_layer)
+            shapes.append(layers)
+            return shapes[0], shapes[1]
+        return shapes[0]
+
+    def rotate_cw(self):
+        shape = self.decode_shape(self.out1_data)
         self.out1_data = ""
-        for layer in range(len(layers)):
-            self.out1_data += layers[layer][6:8] + layers[layer][0:6]
+        for layer in range(len(shape)):
+            self.out1_data += shape[layer][6:8] + shape[layer][0:6]
             self.out1_data += ":"
         self.out1_data = self.out1_data[:-1]
 
     def rotate_ccw(self):
-        temp_layer = ""
-        layers = []
-        for letter in self.out1_data:
-            if letter == ":":
-                layers.append(temp_layer)
-                temp_layer = ""
-            else:
-                temp_layer += letter
-        layers.append(temp_layer)
+        shape = self.decode_shape(self.out1_data)
         self.out1_data = ""
-        for layer in range(len(layers)):
-            self.out1_data += layers[layer][2:8] + layers[layer][0:2]
+        for layer in range(len(shape)):
+            self.out1_data += shape[layer][6:8] + shape[layer][0:6]
             self.out1_data += ":"
         self.out1_data = self.out1_data[:-1]
 
     def rotate_full(self):
-        temp_layer = ""
-        layers = []
-        for letter in self.out1_data:
-            if letter == ":":
-                layers.append(temp_layer)
-                temp_layer = ""
-            else:
-                temp_layer += letter
-        layers.append(temp_layer)
+        shape = self.decode_shape(self.out1_data)
         self.out1_data = ""
-        for layer in range(len(layers)):
-            self.out1_data += layers[layer][4:8] + layers[layer][0:4]
+        for layer in range(len(shape)):
+            self.out1_data += shape[layer][4:8] + shape[layer][0:4]
             self.out1_data += ":"
         self.out1_data = self.out1_data[:-1]
+
+    def cut(self):
+        shape = self.decode_shape(self.out1_data)
+        self.out1_data = ""
+        for layer in range(len(shape)):
+            self.out1_data += f"{shape[layer][0:2]}----{shape[layer][6:8]}"
+            self.out1_data += ":"
+            self.out2_data += f"--{shape[layer][2:6]}--"
+            self.out2_data += ":"
+        self.out1_data = self.out1_data[:-1]
+        self.out2_data = self.out2_data[:-1]
 
     def delete(self):
         self.out1_data = "--------"
