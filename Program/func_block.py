@@ -289,6 +289,7 @@ class Function(pygame.sprite.Sprite):
                 if self.outputs.sprites()[0].connected:
                     if self.outputs.sprites()[0].send_data(self.out1_data):
                         self.out1_data = None
+                
                 if self.outputs.sprites()[1].connected:
                     if self.outputs.sprites()[1].send_data(self.out2_data):
                         self.out2_data = None
