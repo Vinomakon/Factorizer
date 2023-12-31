@@ -18,10 +18,15 @@ colors = {
 
 shape_name = ["R", "C", "S", "W"]
 
+
 class Shape:
-    def __init__(self, start_shape):
-        self.surface = None
+    def __init__(self, start_shape, config, func_size, input_=False, const=False):
+        self.surface = pygame.Surface((shape_size, shape_size), pygame.SRCALPHA | pygame.SCALED)
         self.pos = (0, 0)
+        self.rect = self.surface.get_rect()
+        if not const:
+            self.rect.x = 50 if input_ else func_size[0] - 75
+            self.rect.y = func_size[1] / 2 - 15 + config
         self.shapes = []
         self.shape = copy.deepcopy(start_shape)
         self.shape_position = [[(0, 0), (shape_size / 2, 0), (shape_size / 2, shape_size / 2), (0, shape_size / 2)],
@@ -35,11 +40,21 @@ class Shape:
             self.update("--------")
 
     def update(self, shape):
+        self.surface.fill((255, 255, 255))
+        pygame.draw.circle(self.surface, (230, 230, 230), (shape_size / 2, shape_size / 2), shape_size / 2.4)
+        if len(shape) == 1:
+            color = pygame.image.load("data/images/col.png").convert_alpha()
+            color.fill(colors[shape], special_flags=pygame.BLEND_RGBA_MIN)
+            color = pygame.transform.scale(color, (shape_size / 1.2, shape_size * (color.get_size()[1] / color.get_size()[0]) / 1.2))
+            self.surface.blit(color, (((1 - 1/1.2) * shape_size / 2), ((1 - 1/1.2) * shape_size / 2) + 10))
+            return
         self.shape = shape
-        self.shapes = []
+        shapes = []
         for shape in range(4):
-            self.shapes.append(pygame.image.load("images/" + str(shape + 1) + ".png").convert_alpha())
-        self.surface = pygame.Surface((shape_size, shape_size), pygame.SRCALPHA | pygame.SCALED)
+            shapes.append(pygame.image.load("data/images/" + str(shape + 1) + ".png").convert_alpha())
+        for shape in range(4):
+            shapes.append(pygame.image.load("data/images/" + str(shape + 1) + "b.png").convert_alpha())
+
         temp_layer = ""
         layers = []
         for letter in self.shape:
@@ -52,48 +67,8 @@ class Shape:
         for layer in layers:
             for pair in range(4):
                 if layer[pair * 2] != "-":
-                    temp = copy.copy(self.shapes[shape_name.index(layer[pair * 2])])
+                    temp = copy.copy(shapes[shape_name.index(layer[pair * 2]) + layers.index(layer) * 4])
                     temp.fill(colors[layer[pair * 2 + 1]], special_flags=pygame.BLEND_RGBA_MIN)
                     temp = pygame.transform.rotate(temp, pair * -90)
                     temp = pygame.transform.scale(temp, self.layer_size[layers.index(layer)])
                     self.surface.blit(temp, self.shape_position[layers.index(layer)][pair])
-
-        """
-        self.shapes = []
-        for shape in range(4):
-            self.shapes.append(pygame.image.load("images/" + str(shape + 1) + ".png").convert_alpha())
-        self.surface = pygame.Surface((shape_size, shape_size), pygame.SRCALPHA | pygame.SCALED)
-        for layer in range(len(self.layers)):
-            for i in range(4):
-                if i != 4:
-                    temp = copy.copy(self.shapes[self.layers[layer][i][0]])
-                    temp.fill(self.layers[layer][i][1] if self.layers[layer][i][1] != (0, 0, 0) else (255, 255, 255),
-                              special_flags=pygame.BLEND_RGBA_MIN)
-                    self.surface.blit(pygame.transform.scale(pygame.transform.rotate(temp, -90 * i), (
-                        round((shape_size / 2) / ((layer + 2) / 2)), round((shape_size / 2) / ((layer + 2) / 2)))),
-                                      self.shape_positions[layer][i],
-                                      pygame.transform.scale(temp,
-                                                             (round((shape_size / 2) / ((layer + 2) / 2)),
-                                                              round((shape_size / 2) / ((layer + 2) / 2)))).get_rect())
-"""
-    """
-    def rotate(self, rotate_angle):
-            help_shapes_list = []
-            for layer in range(len(self.layers)):
-                help_shapes_list.append([])
-                for i in range(4):
-                    help_shapes_list[layer].append(self.layers[layer][math.floor((rotate_angle / 90) + i) % 4])
-            self.layers = help_shapes_list
-            self.update()
-
-    def merge(self, second_shape):
-        if not len(second_shape.layers) + len(self.layers) > max_layers:
-            for layer in range(len(second_shape.layers)):
-                self.layers.append(second_shape.layers[layer])
-        self.update()
-
-    def unmerge(self):
-        if len(self.layers) != 1:
-            self.layers = self.layers[:-1]
-        self.update()
-"""

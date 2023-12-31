@@ -1,14 +1,14 @@
 import pygame
 import button
 
-path = "images/"
+path = "data/images/"
 
 font = f"fonts/Bebas-Regular.ttf"
 
 
 class LevelMenu:
     def __init__(self, screen_size):
-        title = pygame.image.load("images/pause.png").convert_alpha()
+        title = pygame.image.load("data/images/pause.png").convert_alpha()
         title_size = title.get_size()
         title = pygame.transform.scale(title,
                                        ((title_size[0] / 4) * (screen_size[0] / 2560),

@@ -1,6 +1,6 @@
 import pygame
 
-path = "images/spawner/"
+path = "data/images/spawner/"
 functions = ["delete", "rotate_cw", "rotate_ccw", "rotate_full", "cut", "color", "paint", "merge"]
 
 
@@ -25,7 +25,6 @@ class Spawner(pygame.sprite.Sprite):
 
         self.bar = pygame.image.load(f"{path}bar.png").convert_alpha()
         ratio = 1000/2560
-        print(self.bar.get_size())
         self.bar = pygame.transform.scale(self.bar, (self.bar.get_size()[0] * ratio * (screen_size[0] / 2560), self.bar.get_size()[1] * ratio * (screen_size[0] / 2560)))
 
         self.image = pygame.surface.Surface(self.bar.get_size(), flags=pygame.SRCALPHA)
@@ -35,11 +34,13 @@ class Spawner(pygame.sprite.Sprite):
 
         self.func_buttons = pygame.sprite.Group()
 
+        all_empty = True
         for func in range(8):
             if allowance[func] == 1:
                 self.func_buttons.add(Func(screen_size, func, ratio, self.rect))
-        
-        self.image.blit(self.bar, (0, 0))
+                all_empty = False
+        if not all_empty:
+            self.image.blit(self.bar, (0, 0))
         self.func_buttons.draw(self.image)
 
     def check(self, mouse_pos):
