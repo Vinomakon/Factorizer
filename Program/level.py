@@ -14,6 +14,8 @@ class Level:
         self.background = pygame.image.load("data/images/background.png")
         self.background = pygame.transform.scale(self.background, (2560, self.background.get_size()[1] / (self.background.get_size()[0] / 2560)))
         self.background_rect = self.background.get_rect()
+        self.corners = pygame.transform.scale(pygame.image.load("data/images/corners.png").convert_alpha(), (2560, self.background.get_size()[1] / (self.background.get_size()[0] / 2560)))
+        self.background.blit(self.corners, (0, 0))
         self.screen_size = screen_size
         self.functions = pygame.sprite.Group()
         self.constants = pygame.sprite.Group()

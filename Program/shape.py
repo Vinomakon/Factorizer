@@ -25,7 +25,7 @@ class Shape:
         self.pos = (0, 0)
         self.rect = self.surface.get_rect()
         if not const:
-            self.rect.x = 50 if input_ else func_size[0] - 75
+            self.rect.x = 45 if input_ else func_size[0] - 75
             self.rect.y = func_size[1] / 2 - 15 + config
         self.shapes = []
         self.shape = copy.deepcopy(start_shape)

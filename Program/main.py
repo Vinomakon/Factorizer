@@ -4,11 +4,11 @@ import pygame
 import os
 import sys
 import fractions
-import main_menu
-import quick_start
-import level
-import level_end
-import level_menu
+from main_menu import MainScreen
+from quick_start import QuickStart
+from level import Level
+from level_end import LevelEnd
+from level_menu import LevelMenu
 
 os.environ["SDL_VIDEO_CENTERED"] = "1"
 
@@ -48,7 +48,7 @@ screen_location = 0
 levels_done = 3
 current_level = 0
 
-quick = quick_start.QuickStart()
+quick = QuickStart()
 loader_time = time.time()
 while time.time() - loader_time <= 1:
     pass
@@ -58,7 +58,7 @@ tick = 0
 tick_duration = 0.25
 tick_time = time.time()
 
-menu = main_menu.MainScreen(screen_size, levels_done)
+menu = MainScreen(screen_size, levels_done)
 game = None
 
 music_list = reload_music()
@@ -67,8 +67,8 @@ pygame.mixer.music.load(f"data/music/{music_list[0]}")
 pygame.mixer.music.play()
 pygame.mixer.music.set_volume(0)
 
-menu_screen = level_menu.LevelMenu(screen_size)
-level_screen = level_end.LevelEnd(screen_size, levels_done)
+menu_screen = LevelMenu(screen_size)
+level_screen = LevelEnd(screen_size, levels_done)
 
 goal_reached = False
 on_menu = False
@@ -96,7 +96,7 @@ while True:
                     execute_time = time.time()
                     tick_time = time.time() + 0.4
                     current_level = function[0]
-                    game = level.Level(screen_size, current_level)
+                    game = Level(screen_size, current_level)
             elif event.type == pygame.MOUSEBUTTONUP:
                 menu.on_release(event.pos)
 
@@ -110,16 +110,16 @@ while True:
                             if levels_done < levels_done + 1:
                                 levels_done += 1
                             current_level += 1
-                            game = level.Level(screen_size, levels_done)
+                            game = Level(screen_size, current_level)
                         elif function == "menu":
                             screen_location = 0
                             goal_reached = False
-                            menu = main_menu.MainScreen(screen_size, levels_done)
+                            menu = MainScreen(screen_size, levels_done)
                         elif function == "restart":
                             execute_time = time.time()
                             tick_time = time.time() + 0.4
                             goal_reached = False
-                            game = level.Level(screen_size, levels_done)
+                            game = Level(screen_size, levels_done)
             elif on_menu:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if pygame.mouse.get_pressed()[0]:
@@ -127,14 +127,14 @@ while True:
                         if function == "menu":
                             on_menu = False
                             screen_location = 0
-                            menu = main_menu.MainScreen(screen_size, levels_done)
+                            menu = MainScreen(screen_size, levels_done)
                         elif function == "back":
                             on_menu = False
                         elif function == "restart":
                             on_menu = False
                             execute_time = time.time()
                             tick_time = time.time() + 0.4
-                            game = level.Level(screen_size, levels_done)
+                            game = Level(screen_size, current_level)
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         on_menu = not on_menu
@@ -179,7 +179,7 @@ while True:
                 if tick == 0:
                     goal_reached, level, quality = game.tick()
                     if goal_reached:
-                        level_screen = level_end.LevelEnd(screen_size, 0)
+                        level_screen = LevelEnd(screen_size, 0)
                     tick = 1
                 else:
                     game.execute()

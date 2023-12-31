@@ -9,7 +9,6 @@ class Slider(pygame.sprite.Sprite):
         
         self.actual_size = size
         self.size = (size[0], int(size[1] * (2/3)))
-        print(size, self.size)
         self.pos = pos
         self.text = text
         self.value = value
