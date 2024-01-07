@@ -1,9 +1,7 @@
 import math
-
 import pygame
 import button
 import slider
-import time
 
 
 class MainScreen:
@@ -25,32 +23,34 @@ class MainScreen:
         self.surface = pygame.surface.Surface(screen_size, pygame.SRCALPHA)
         self.menu_type = 0
 
+        ratio = screen_size[0] / 2560
+
         # All objects for the main menu
-        start_button = button.Button((700, 150), (screen_size[0] / 2, screen_size[1] / 2.3), "Start", 1)
-        options_button = button.Button((700, 150), (screen_size[0] / 2, screen_size[1] / 1.7), "Options", 2)
-        credits_button = button.Button((700, 150), (screen_size[0] / 2, screen_size[1] / 1.35), "Credits", 3)
-        exit_button = button.Button((250, 75), (screen_size[0] / 2, screen_size[1] / 1.1), "Exit", "exit")
+        start_button = button.Button((int(700 * ratio), int(150 * ratio)), (screen_size[0] / 2, screen_size[1] / 2.3), "Start", 1)
+        options_button = button.Button((int(700 * ratio), int(150 * ratio)), (screen_size[0] / 2, screen_size[1] / 1.7), "Options", 2)
+        credits_button = button.Button((int(700 * ratio), int(150 * ratio)), (screen_size[0] / 2, screen_size[1] / 1.35), "Credits", 3)
+        exit_button = button.Button((int(250 * ratio), int(100 * ratio)), (screen_size[0] / 2, screen_size[1] / 1.1), "Exit", "exit")
         self.menu_buttons = pygame.sprite.Group()
         self.menu_buttons.add(start_button, exit_button, options_button, credits_button)
 
         # All objects for the level menu
         self.level_buttons = pygame.sprite.Group()
         for lev_but in range(16):
-            but = button.Button((200, 200), (screen_size[0] / 3.8 + 300 * (screen_size[0] / 1920) * (lev_but % 4), screen_size[1] / 6 + 200 * (screen_size[1] / 1080) * math.floor(lev_but / 4)), str(lev_but + 1), [lev_but], active=True if lev_but <= current_level else False )
+            but = button.Button((int(200 * ratio), int(200 * ratio)), (screen_size[0] / 3.5 + 400 * ratio * (lev_but % 4), screen_size[1] / 6 + 300 * ratio * math.floor(lev_but / 4)), str(lev_but + 1), [lev_but], active=True if lev_but <= current_level else False )
             self.level_buttons.add(but)
-        back_button = button.Button((400, 130), (screen_size[0] / 10, screen_size[1] / 1.1), "Back", 0)
+        back_button = button.Button((int(400 * ratio), int(130 * ratio)), (screen_size[0] / 10, screen_size[1] / 1.1), "Back", 0)
         self.level_buttons.add(back_button)
 
         # All objects for the options menu
-        back_button = button.Button((400, 130), (screen_size[0] / 10, screen_size[1] / 1.1), "Back", 0)
-        music_volume = slider.Slider((500, 150), (screen_size[0] / 2, screen_size[1] / 2), "Music volume", 0, "music")
+        back_button = button.Button((int(400 * ratio), int(130 * ratio)), (screen_size[0] / 10, screen_size[1] / 1.1), "Back", 0)
+        music_volume = slider.Slider((int(500 * ratio), int(150 * ratio)), (screen_size[0] / 2, screen_size[1] / 2), "Music volume", pygame.mixer.music.get_volume(), "music")
         self.options_buttons = pygame.sprite.Group()
         self.options_buttons.add(back_button)
         self.options_sliders = pygame.sprite.Group()
         self.options_sliders.add(music_volume)
 
         # All objects for the credits:
-        back_button = button.Button((400, 130), (screen_size[0] / 10, screen_size[1] / 1.1), "Back", 0)
+        back_button = button.Button((int(400 * ratio), int(130 * ratio)), (screen_size[0] / 10, screen_size[1] / 1.1), "Back", 0)
         self.credits_buttons = pygame.sprite.Group()
         self.credits_buttons.add(back_button)
 

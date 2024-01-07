@@ -12,23 +12,30 @@ class Level:
         self.surface = pygame.surface.Surface(screen_size)
         self.surface.fill((100, 100, 100))
         self.background = pygame.image.load("data/images/background.png")
-        self.background = pygame.transform.scale(self.background, (2560, self.background.get_size()[1] / (self.background.get_size()[0] / 2560)))
+        self.background = pygame.transform.scale(self.background, (
+            screen_size[0], self.background.get_size()[1] / (self.background.get_size()[0] / screen_size[0])))
         self.background_rect = self.background.get_rect()
-        self.corners = pygame.transform.scale(pygame.image.load("data/images/corners.png").convert_alpha(), (2560, self.background.get_size()[1] / (self.background.get_size()[0] / 2560)))
+        self.corners = pygame.transform.scale(pygame.image.load("data/images/corners.png").convert_alpha(), (
+            screen_size[0], self.background.get_size()[1] / (self.background.get_size()[0] / screen_size[0])))
         self.background.blit(self.corners, (0, 0))
         self.screen_size = screen_size
         self.functions = pygame.sprite.Group()
         self.constants = pygame.sprite.Group()
+        self.goals = []
 
-        self.complete = False
-
+        self.complete = []
         self.setup = level_setup.levels[level]
         for outputs in range(len(self.setup[0])):
-            cons = constant.Constant((0, (screen_size[1] / (len(self.setup[0]) + 1)) * (outputs + 1)), self.setup[0][outputs], False)
+            cons = constant.Constant((0, (screen_size[1] / (len(self.setup[0]) + 1)) * (outputs + 1)),
+                                     self.setup[0][outputs], False)
             self.constants.add(cons)
         for goals in range(len(self.setup[1])):
-            self.goal = constant.Constant((screen_size[0] - 150, (screen_size[1] / (len(self.setup[1]) + 1)) * (goals + 1)), self.setup[1][goals], True)
+            self.goal = constant.Constant((screen_size[0] - 150,
+                                           (screen_size[1] / (len(self.setup[1]) + 1)) * (goals + 1)),
+                                          self.setup[1][goals], True)
             self.constants.add(self.goal)
+            self.goals.append(self.goal)
+            self.complete.append(False)
         self.spawner = spawner.Spawner(screen_size, self.setup[2])
         self.dragging = None
 
@@ -138,7 +145,8 @@ class Level:
                         # If one dot is being connected, the dot is available,
                         # one is an input and the other an output and both are the same type:
                         # Connect both of these dots and create connections between them.
-                        if available and self.connection_type != op_type and (self.data_type == data_type or current_func.function == "delete"):
+                        if available and self.connection_type != op_type and (
+                                self.data_type == data_type or current_func.function == "delete"):
                             connection = (self.connection1, dot_pos) if op_type == 1 else (dot_pos, self.connection1)
                             self.op_func_dot.connection_pos = connection
                             op_func_dot.connection_pos = connection
@@ -269,9 +277,15 @@ class Level:
             cons.send_data()
         for func in self.functions:
             func.receive_data()
-        if self.goal.check_goal():
-            self.complete = True
-        return self.complete, 0, 0
+        complete = True
+        for goal in range(len(self.goals)):
+            if self.goals[goal].check_goal():
+                self.complete[goal] = True
+            else:
+                self.complete[goal] = False
+                complete = False
+            self.goals[goal].del_data()
+        return complete, len(self.functions)
 
     def execute(self):
         for func in self.functions:
@@ -283,10 +297,13 @@ class Level:
             function.draggable(True, (mouse_pos[0] + function.rect.w / 2, mouse_pos[1] + function.rect.h / 2))
             self.dragging = function
 
+    def refresh_data(self):
+        for func in self.functions:
+            func.refresh()
+
     def delete_func(self, mouse_pos):
         for func in self.functions:
             if func.rect.collidepoint(mouse_pos):
                 func.deletion()
                 self.functions.remove(func)
                 self.redo_connections()
-

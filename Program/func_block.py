@@ -182,6 +182,31 @@ class Function(pygame.sprite.Sprite):
             self.inputs.update((self.rect.x, self.rect.y))
             self.outputs.update((self.rect.x, self.rect.y))
 
+    def refresh(self):
+        for shp in range(len(self.in_displays)):
+            self.in_displays[shp].update("--------")
+            self.image.blit(pygame.transform.scale(self.in_displays[shp].surface, (30, 30)),
+                            self.in_displays[shp].rect)
+
+        for shp in range(len(self.out_displays)):
+            self.out_displays[shp].update("--------")
+            self.image.blit(pygame.transform.scale(self.out_displays[shp].surface, (30, 30)),
+                            self.out_displays[shp].rect)
+        for inp in self.inputs:
+            inp.data = None
+            inp.full = False
+            inp.sent = False
+        for out in self.outputs:
+            out.data = None
+            out.full = False
+            out.sent = False
+        self.out1_data = None
+        self.out2_data = None
+        self.in1_data = None
+        self.in2_data = None
+        self.full = False
+        self.outs_full = [False, False]
+
     def deletion(self):
         for inp in self.inputs:
             inp.del_connection()

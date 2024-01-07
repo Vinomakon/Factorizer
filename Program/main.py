@@ -3,7 +3,7 @@ import screeninfo
 import pygame
 import os
 import sys
-import fractions
+from save_load_system import SaveLoadSystem
 from main_menu import MainScreen
 from quick_start import QuickStart
 from level import Level
@@ -21,7 +21,7 @@ colors = {
     "magenta": (237, 55, 219),  # Magenta
     "yellow": (240, 240, 36),  # Yellow
     "white": (255, 255, 255),  # White
-    "uncolored": (190, 190, 190) # Uncolored
+    "uncolored": (190, 190, 190)  # Uncolored
 }
 
 
@@ -29,12 +29,18 @@ def reload_music():
     return os.listdir("data/music")
 
 
+saver_loader = SaveLoadSystem(".txt", "data/saves")
+save_data = saver_loader.load_data("save_data", default=[])
+
+if len(save_data) == 0:
+    save_data = [0, [[0, 0] for i in range(16)], [1, 0]]
+    print("ey")
+
+
 screens = screeninfo.get_monitors()
 canvas_w = screens[0].width
 canvas_h = screens[0].height
 screen_size = (canvas_w, canvas_h)
-screen_ratio = list(format(fractions.Fraction(int(canvas_w), int(canvas_h))))
-screen_ratio.pop(1)
 
 pygame.init()
 icon = pygame.image.load("data/images/icon.png")
@@ -45,7 +51,7 @@ fps_clock = pygame.time.Clock()
 fps = 1000
 
 screen_location = 0
-levels_done = 3
+levels_done = save_data[0]
 current_level = 0
 
 quick = QuickStart()
@@ -58,17 +64,17 @@ tick = 0
 tick_duration = 0.25
 tick_time = time.time()
 
-menu = MainScreen(screen_size, levels_done)
-game = None
-
 music_list = reload_music()
 music_index = 0
 pygame.mixer.music.load(f"data/music/{music_list[0]}")
 pygame.mixer.music.play()
-pygame.mixer.music.set_volume(0)
+pygame.mixer.music.set_volume(save_data[2][0])
 
+menu = MainScreen(screen_size, levels_done)
+game = None
+level_time = None
 menu_screen = LevelMenu(screen_size)
-level_screen = LevelEnd(screen_size, levels_done)
+level_screen = None
 
 goal_reached = False
 on_menu = False
@@ -79,24 +85,34 @@ action = None
 
 reload_music()
 
+
+def end_game():
+    save_data[0] = levels_done
+    save_data[2] = [pygame.mixer.music.get_volume(), 0]
+    print(save_data)
+    print(pygame.mixer.music.get_volume())
+    saver_loader.save_data(save_data, "save_data")
+    pygame.quit()
+    sys.exit()
+
+
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+            end_game()
 
         if screen_location == 0:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 function = menu.on_click(event.pos)
                 if function == "exit":
-                    pygame.quit()
-                    sys.exit()
+                    end_game()
                 elif isinstance(function, list):
                     screen_location = 1
                     execute_time = time.time()
                     tick_time = time.time() + 0.4
                     current_level = function[0]
                     game = Level(screen_size, current_level)
+                    level_time = time.time()
             elif event.type == pygame.MOUSEBUTTONUP:
                 menu.on_release(event.pos)
 
@@ -107,8 +123,6 @@ while True:
                         function = level_screen.on_click(event.pos)
                         if function == "next":
                             goal_reached = False
-                            if levels_done < levels_done + 1:
-                                levels_done += 1
                             current_level += 1
                             game = Level(screen_size, current_level)
                         elif function == "menu":
@@ -149,6 +163,8 @@ while True:
                 elif event.type == pygame.KEYDOWN:
                     if 49 <= event.key <= 57:
                         game.spawn(event.key - 49, pygame.mouse.get_pos())
+                    if event.key == pygame.K_r:
+                        game.refresh_data()
                     if event.key == pygame.K_ESCAPE:
                         on_menu = not on_menu
 
@@ -177,9 +193,11 @@ while True:
             main_display.blit(pygame.transform.scale(game.surface, screen_size), (0, 0))
             if time.time() - tick_time >= tick_duration:
                 if tick == 0:
-                    goal_reached, level, quality = game.tick()
+                    goal_reached, quality = game.tick()
                     if goal_reached:
-                        level_screen = LevelEnd(screen_size, 0)
+                        level_screen = LevelEnd(screen_size, 0, quality, time.time() - level_time)
+                        if levels_done < current_level + 1:
+                            levels_done += 1
                     tick = 1
                 else:
                     game.execute()

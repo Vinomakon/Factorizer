@@ -58,6 +58,9 @@ class Constant(pygame.sprite.Sprite):
         if not self.inp:
             self.dot.send_data(self.data)
 
+    def del_data(self):
+        self.dot.data = None
+
     def check_goal(self):
         if self.dot.data == self.data and self.inp:
             return True
