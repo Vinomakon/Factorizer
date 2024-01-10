@@ -12,7 +12,7 @@ class QuickStart:
 
         quick_screen = pygame.display.set_mode((400, 400), flags=pygame.NOFRAME, depth=32, vsync=True)
 
-        logo = pygame.image.load("images/logo.png").convert_alpha()
+        logo = pygame.image.load("data/images/logo.png").convert_alpha()
         logo_size = logo.get_size()
         logo = pygame.transform.scale(logo, (logo_size[0] / 4, logo_size[1] / 4))
 

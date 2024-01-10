@@ -1,15 +1,15 @@
 import pygame
 
-path = "images/"
+path = "data/images/"
 
 
 class Dot(pygame.sprite.Sprite):
-    def __init__(self, type, config, func_size, pos, input=True, const=False):
+    def __init__(self, type, config, func_size, pos, input_=True, const=False):
         pygame.sprite.Sprite.__init__(self)
         self.config = config
         self.func_size = func_size
         self.type = type
-        self.inputs = input
+        self.input_ = input_
         self.connecting = False
         self.connected = False
         self.connection_pos = ()
@@ -35,21 +35,20 @@ class Dot(pygame.sprite.Sprite):
             self.loc_rect = self.image.get_rect()
             self.loc_rect.center = (10, 10)
 
-        self.rect.x = (20 if input else func_size[0] - 40) if not const else pos[0]
+        self.rect.x = (20 if input_ else func_size[0] - 40) if not const else pos[0]
         self.rect.y = (func_size[1] / 2 - 10 + config) if not const else pos[1]
-        self.loc_rect.x = ((20 if input else func_size[0] - 40) + pos[0]) if not const else pos[0]
+        self.loc_rect.x = ((20 if input_ else func_size[0] - 40) + pos[0]) if not const else pos[0]
         self.loc_rect.y = (func_size[1] / 2 - 10 + config + pos[1]) if not const else pos[1] - 10
 
     def update(self, pos):
-        self.loc_rect.x = (20 if self.inputs else self.func_size[0] - 40) + pos[0]
+        self.loc_rect.x = (20 if self.input_ else self.func_size[0] - 40) + pos[0]
         self.loc_rect.y = (self.func_size[1] / 2 - 10) + self.config + pos[1]
-        self.rect.center = (10 + (20 if self.inputs else self.func_size[0] - 40) + pos[0], 10 + (self.func_size[1] / 2 - 10) + self.config + pos[1])
+        self.rect.center = (10 + (20 if self.input_ else self.func_size[0] - 40) + pos[0], 10 + (self.func_size[1] / 2 - 10) + self.config + pos[1])
 
     def send_data(self, data):
         if self.connected and not self.connected_dot.full:
             self.connected_dot.data = data
-            self.data = None
-            return self.sent
+            return True
         return False
 
     def del_connection(self):
@@ -63,4 +62,5 @@ class Dot(pygame.sprite.Sprite):
         self.connected = False
         self.connection_pos = ()
         self.connected_dot = None
+        self.full = False
         self.sent = False
