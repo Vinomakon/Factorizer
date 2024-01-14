@@ -1,5 +1,7 @@
 import pickle
 import os
+# Save load system to load and save all relevant data (written by Jack)
+# // https://www.youtube.com/watch?v=3IfQQHZ_rqM&t=2s
 
 
 class SaveLoadSystem:

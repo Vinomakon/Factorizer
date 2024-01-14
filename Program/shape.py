@@ -43,7 +43,7 @@ class Shape:
         self.surface.fill((255, 255, 255))
         pygame.draw.circle(self.surface, (230, 230, 230), (shape_size / 2, shape_size / 2), shape_size / 2.4)
         if len(shape) == 1:
-            color = pygame.image.load("data/images/col.png").convert_alpha()
+            color = pygame.image.load("data/images/shapes/col.png").convert_alpha()
             color.fill(colors[shape], special_flags=pygame.BLEND_RGBA_MIN)
             color = pygame.transform.scale(color, (shape_size / 1.2, shape_size * (color.get_size()[1] / color.get_size()[0]) / 1.2))
             self.surface.blit(color, (((1 - 1/1.2) * shape_size / 2), ((1 - 1/1.2) * shape_size / 2) + 10))
@@ -51,9 +51,9 @@ class Shape:
         self.shape = shape
         shapes = []
         for shape in range(4):
-            shapes.append(pygame.image.load("data/images/" + str(shape + 1) + ".png").convert_alpha())
+            shapes.append(pygame.image.load("data/images/shapes/" + str(shape + 1) + ".png").convert_alpha())
         for shape in range(4):
-            shapes.append(pygame.image.load("data/images/" + str(shape + 1) + "b.png").convert_alpha())
+            shapes.append(pygame.image.load("data/images/shapes/" + str(shape + 1) + "b.png").convert_alpha())
 
         temp_layer = ""
         layers = []

@@ -64,8 +64,6 @@ class Slider(pygame.sprite.Sprite):
             self.circle_rect.x = pos - self.pos[0] - self.circle_size
             self.loc_circle_rect.x = pos - self.circle_size
             self.value = (self.circle_rect.x - self.circle_size) / (self.size[0] - self.circle_size * 4)
-            if self.func == "music":
-                pygame.mixer.music.set_volume(self.value)
         else:
 
             if self.loc_circle_rect.collidepoint(mouse_pos):
@@ -84,4 +82,4 @@ class Slider(pygame.sprite.Sprite):
                     center=(self.size[0] / 2, self.actual_size[1] - int(self.size[1] * (1 / 3) - 5)))
         self.image.blit(self.slider, (0, 0))
         self.image.blit(self.text_render, self.text_rect)
-
+        return self.func, self.value

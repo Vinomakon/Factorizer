@@ -1,8 +1,10 @@
+import copy
 import pygame
-import func_block
-import constant
-import spawner
-import level_setup
+from func_block import Function
+from constant import Constant
+from spawner import Spawner
+from level_setup import levels as level_setups
+from spec_button import SpecButton
 
 functions = ["delete", "rotate_cw", "rotate_ccw", "rotate_full", "cut", "merge", "paint", "color"]
 
@@ -11,11 +13,11 @@ class Level:
     def __init__(self, screen_size, level):
         self.surface = pygame.surface.Surface(screen_size)
         self.surface.fill((100, 100, 100))
-        self.background = pygame.image.load("data/images/background.png")
+        self.background = pygame.image.load("data/images/level/background.png")
         self.background = pygame.transform.scale(self.background, (
             screen_size[0], self.background.get_size()[1] / (self.background.get_size()[1] / screen_size[1])))
         self.background_rect = self.background.get_rect()
-        self.corners = pygame.transform.scale(pygame.image.load("data/images/corners.png").convert_alpha(), (
+        self.corners = pygame.transform.scale(pygame.image.load("data/images/level/corners.png").convert_alpha(), (
             screen_size[0], self.background.get_size()[1] / (self.background.get_size()[1] / screen_size[1])))
         self.background.blit(self.corners, (0, 0))
         self.screen_size = screen_size
@@ -23,23 +25,29 @@ class Level:
         self.constants = pygame.sprite.Group()
         self.goals = []
 
+        self.ratio = screen_size[0] / 2560
+
         self.complete = []
-        self.setup = level_setup.levels[level]
+        self.setup = level_setups[level]
+
         for outputs in range(len(self.setup[0])):
-            cons = constant.Constant(screen_size, (0, (screen_size[1] / (len(self.setup[0]) + 1)) * (outputs + 1)),
+            cons = Constant(screen_size, (0, (screen_size[1] / (len(self.setup[0]) + 1)) * (outputs + 1)),
                                      self.setup[0][outputs], False)
             self.constants.add(cons)
         for goals in range(len(self.setup[1])):
-            self.goal = constant.Constant(screen_size, (screen_size[0] - 150,
+            self.goal = Constant(screen_size, (screen_size[0] - 150,
                                            (screen_size[1] / (len(self.setup[1]) + 1)) * (goals + 1)),
                                           self.setup[1][goals], True)
             self.constants.add(self.goal)
             self.goals.append(self.goal)
             self.complete.append(False)
-        self.spawner = spawner.Spawner(screen_size, self.setup[2])
+        self.spawner = Spawner(screen_size, self.setup[2])
         self.dragging = None
 
-        self.functions.draw(self.surface)
+        self.buttons = pygame.sprite.Group()
+        self.buttons.add(SpecButton((int(150 * self.ratio), int(150 * self.ratio)), (screen_size[0] / 2 - int(90 * self.ratio), screen_size[1] / 14.5), "menu"))
+        self.buttons.add(SpecButton((int(150 * self.ratio), int(150 * self.ratio)), (screen_size[0] / 2 + int(90 * self.ratio), screen_size[1] / 14.5), "refresh"))
+
         self.connections = []
         self.connecting = False
         self.connection1 = ()
@@ -48,11 +56,7 @@ class Level:
         self.op_func_dot = None
         self.data_type = None
 
-    def res_change(self, screen_size):
-        self.surface = pygame.surface.Surface(screen_size, pygame.SRCALPHA)
-
-    def on_click(self, mouse_pos):
-        self.surface = pygame.surface.Surface(self.screen_size, pygame.SRCALPHA)
+    def on_click(self, mouse_pos, delete=False):
         # Failed Attempt N.1
         """
         connection_active = False
@@ -119,15 +123,24 @@ class Level:
             self.connecting = False
             self.op_func = None
             """
+        func_ = self.spawner.check(mouse_pos)
+        if func_ is not None:
+            self.spawn(func_, mouse_pos)
+            return "spawn", None
+        for but in self.buttons:
+            if but.rect.collidepoint(mouse_pos):
+                return but.func, but.func
+
         op_done = False
-        touched = 0
         for func in range(len(self.functions)):
             current_func = self.functions.sprites()[len(self.functions) - func - 1]
-            if current_func.rect.collidepoint(mouse_pos) and not op_done:
-                touched += 1
+            if current_func.rect.collidepoint(mouse_pos):
+                if delete:
+                    self.delete_func(current_func)
+                    self.connecting = False
+                    return None, "delete"
                 on_dot, available, dot_pos, op_type, data_type, op_func_dot = current_func.check(mouse_pos)
                 if on_dot:
-                    op_done = True
                     if not self.connecting:
                         # If nothing is being connected and the dot is available:
                         # Enable to be ready to connect to another dot.
@@ -140,7 +153,8 @@ class Level:
                             self.op_func_dot = op_func_dot
 
                             self.redo_connections()
-                            return
+                            return None, None
+
                     elif self.connecting:
                         # If one dot is being connected, the dot is available,
                         # one is an input and the other an output and both are the same type:
@@ -160,7 +174,7 @@ class Level:
                             self.connecting = False
 
                             self.redo_connections()
-                            return
+                            return None, None
                         # Else: disable the active connecting and make the dot available again
 
                     # Put the used functions in front of the others
@@ -170,21 +184,20 @@ class Level:
                 # Else if not currently connecting: Remove all existing connections to this function
                 elif not self.connecting:
                     self.op_func = current_func
-                    self.functions.remove(self.op_func)
-                    self.functions.add(self.op_func)
-                    self.connecting = False
                     current_func.draggable(True, mouse_pos)
                     self.functions.remove(current_func)
                     self.dragging = current_func
 
                     self.redo_connections()
-                    return
+                    return None, None
+
+        if delete:
+            return None, None
 
         for cons in range(len(self.constants)):
             current_cons = self.constants.sprites()[cons]
             on_dot, available, dot_pos, op_type, data_type, op_func_dot = current_cons.check(mouse_pos)
             if on_dot:
-                touched += 1
                 if not self.connecting:
                     # If nothing is being connected and the dot is available:
                     # Enable to be ready to connect to another dot.
@@ -197,7 +210,7 @@ class Level:
                         self.op_func_dot = op_func_dot
 
                         self.redo_connections()
-                        return
+                        return None, None
                 elif self.connecting:
                     # If one dot is being connected, the dot is available,
                     # one is an input and the other an output and both are the same type:
@@ -214,14 +227,10 @@ class Level:
                         self.op_func_dot.connected = True
                         op_func_dot.connected = True
                         self.connecting = False
+                        self.forget()
 
                         self.redo_connections()
-                        return
-                    # Else: disable the active connection and make the dot available again
-
-        func = self.spawner.check(mouse_pos)
-        if func is not None:
-            self.spawn(func, mouse_pos)
+                        return None, None
 
         self.connecting = False
         self.connection1 = ()
@@ -232,6 +241,7 @@ class Level:
         self.op_func = None
 
         self.redo_connections()
+        return None, None
 
     def redo_connections(self):
         self.connections.clear()
@@ -247,11 +257,14 @@ class Level:
         if self.dragging:
             if self.spawner.rect.colliderect(self.dragging.rect):
                 self.functions.remove(self.dragging)
-                self.dragging = None
+                self.forget()
+                return "delete"
             else:
                 self.dragging.draggable(False, mouse_pos)
-                self.functions.add(self.dragging)
-                self.dragging = None
+                func_ = copy.copy(self.dragging)
+                self.functions.add(func_)
+                self.functions.sprites()[len(self.functions) - 1].refresh()
+                self.forget()
 
     def refresh(self, mouse_pos):
         for func in self.functions:
@@ -262,19 +275,28 @@ class Level:
         self.constants.draw(self.surface)
         self.surface.blit(self.goal.image, self.goal.rect)
         self.surface.blit(self.spawner.image, self.spawner.rect)
+
+        for connection in self.connections:
+            pygame.draw.line(self.surface, (77, 77, 77), connection[0], connection[1], 8)
+            pygame.draw.line(self.surface, (130, 130, 130), connection[0], connection[1], 2)
+        if self.connecting:
+            pygame.draw.line(self.surface, (77, 77, 77), self.connection1, mouse_pos, 8)
+            pygame.draw.line(self.surface, (130, 130, 130), self.connection1, mouse_pos, 2)
         if self.dragging:
             self.dragging.update(mouse_pos)
             self.surface.blit(self.dragging.image, self.dragging.rect)
-        for connection in self.connections:
-            pygame.draw.line(self.surface, (77, 0, 0), connection[0], connection[1], 8)
-        if self.connecting:
-            pygame.draw.line(self.surface, (77, 0, 0), self.connection1, mouse_pos, 8)
+        for but in self.buttons:
+            if but.rect.collidepoint(mouse_pos):
+                but.check(True)
+            else:
+                but.check(False)
+        self.buttons.draw(self.surface)
 
     def tick(self):
-        for func in self.functions:
-            func.send_data()
         for cons in self.constants:
             cons.send_data()
+        for func in self.functions:
+            func.send_data()
         for func in self.functions:
             func.receive_data()
         complete = True
@@ -284,6 +306,10 @@ class Level:
             else:
                 self.complete[goal] = False
                 complete = False
+        self.constants.draw(self.surface)
+        for connection in self.connections:
+            pygame.draw.line(self.surface, (77, 77, 77), connection[0], connection[1], 8)
+            pygame.draw.line(self.surface, (180, 180, 180), connection[0], connection[1], 2)
         return complete, len(self.functions)
 
     def execute(self):
@@ -292,9 +318,9 @@ class Level:
 
     def spawn(self, func, mouse_pos):
         if self.setup[2][func]:
-            function = func_block.Function(functions[func], mouse_pos)
-            function.draggable(True, (mouse_pos[0] + function.rect.w / 2, mouse_pos[1] + function.rect.h / 2))
+            function = Function(functions[func], mouse_pos)
             self.dragging = function
+            function.draggable(True, (mouse_pos[0] + function.rect.w / 2, mouse_pos[1] + function.rect.h / 2))
 
     def refresh_data(self):
         for func in self.functions:
@@ -302,9 +328,16 @@ class Level:
         for goal in self.goals:
             goal.del_data()
 
-    def delete_func(self, mouse_pos):
-        for func in self.functions:
-            if func.rect.collidepoint(mouse_pos):
-                func.deletion()
-                self.functions.remove(func)
-                self.redo_connections()
+    def delete_func(self, func):
+        func.deletion()
+        self.functions.remove(func)
+        self.redo_connections()
+        return "delete"
+
+    def forget(self):
+        self.connecting = None
+        self.connection1 = None
+        self.connection_type = None
+        self.data_type = None
+        self.op_func_dot = None
+        self.dragging = None

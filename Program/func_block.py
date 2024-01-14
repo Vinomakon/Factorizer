@@ -22,7 +22,7 @@ colors = {
     "u": (150, 150, 150)  # Uncolored / Grey
 }
 
-path = "data/images/"
+path = "data/images/functions/"
 
 max_layers = 2
 
@@ -157,6 +157,7 @@ class Function(pygame.sprite.Sprite):
     def draggable(self, state, mouse_pos):
         self.dragging = state
         if state:
+            self.start_drag = mouse_pos
             for shp in range(len(self.in_displays)):
                 self.in_displays[shp].update("--------")
                 self.image.blit(pygame.transform.scale(self.in_displays[shp].surface, (30, 30)),
@@ -166,13 +167,10 @@ class Function(pygame.sprite.Sprite):
                 self.out_displays[shp].update("--------")
                 self.image.blit(pygame.transform.scale(self.out_displays[shp].surface, (30, 30)),
                                 self.out_displays[shp].rect)
-            self.start_drag = mouse_pos
             for inp in self.inputs:
                 inp.del_connection()
-                inp.data = None
             for out in self.outputs:
                 out.del_connection()
-                out.data = None
             self.out1_data = None
             self.out2_data = None
             self.in1_data = None
@@ -195,7 +193,6 @@ class Function(pygame.sprite.Sprite):
         for inp in self.inputs:
             inp.data = None
             inp.full = False
-            inp.sent = False
         for out in self.outputs:
             out.data = None
             out.full = False
@@ -206,6 +203,7 @@ class Function(pygame.sprite.Sprite):
         self.in2_data = None
         self.full = False
         self.outs_full = [False, False]
+        self.allow_execute = True
 
     def deletion(self):
         for inp in self.inputs:
@@ -214,14 +212,13 @@ class Function(pygame.sprite.Sprite):
             out.del_connection()
 
     def update(self, mouse_pos):
+
         if self.dragging:
             self.rect.x = self.init_pos[0] - self.start_drag[0] + mouse_pos[0]
             self.rect.y = self.init_pos[1] - self.start_drag[1] + mouse_pos[1]
 
-        elif self.function == "delete":
-            pass
-
-        elif self.function == "rotate_cw" or self.function == "rotate_ccw" or self.function == "rotate_full" or self.function == "merge" or self.function == "paint" or self.function == "color":
+        elif (self.function == "rotate_cw" or self.function == "rotate_ccw" or self.function == "rotate_full" or
+              self.function == "merge" or self.function == "paint" or self.function == "color"):
             self.full = self.outs_full[0]
 
         elif self.function == "cut":
@@ -270,7 +267,6 @@ class Function(pygame.sprite.Sprite):
         """
 
     def receive_data(self):
-
         if self.function == "rotate_cw" or self.function == "rotate_ccw" or self.function == "rotate_full" or self.function == "cut" or self.function == "delete":
             if self.in1_data is None:
                 if self.inputs.sprites()[0].data:
@@ -283,8 +279,10 @@ class Function(pygame.sprite.Sprite):
                                     self.in_displays[0].rect)
                 else:
                     self.allow_execute = False
+                    self.inputs.sprites()[0].full = False
             else:
                 self.allow_execute = True
+                self.inputs.sprites()[0].full = True
 
         elif self.function == "merge" or self.function == "paint" or self.function == "color":
             if self.in1_data is None and self.inputs.sprites()[0].data:
@@ -295,10 +293,12 @@ class Function(pygame.sprite.Sprite):
                 self.in_displays[0].update(self.in1_data)
                 self.image.blit(pygame.transform.scale(self.in_displays[0].surface, (30, 30)),
                                 self.in_displays[0].rect)
-            elif self.in1_data:
+            elif self.in1_data is not None:
                 self.allow_execute = True
+                self.inputs.sprites()[0].full = True
             else:
                 self.allow_execute = False
+                self.inputs.sprites()[0].full = False
 
             if self.in2_data is None and self.inputs.sprites()[1].data:
                 self.in2_data = self.inputs.sprites()[1].data
@@ -308,10 +308,12 @@ class Function(pygame.sprite.Sprite):
                 self.in_displays[1].update(self.in2_data)
                 self.image.blit(pygame.transform.scale(self.in_displays[1].surface, (30, 30)),
                                 self.in_displays[1].rect)
-            elif self.in2_data:
+            elif self.in2_data is not None:
                 self.allow_execute = True and self.allow_execute
+                self.inputs.sprites()[1].full = True
             else:
                 self.allow_execute = False and self.allow_execute
+                self.inputs.sprites()[1].full = False
 
         self.allow_execute = self.allow_execute and not self.full
 
@@ -476,6 +478,8 @@ class Function(pygame.sprite.Sprite):
                     self.image.blit(pygame.transform.scale(self.out_displays[1].surface, (30, 30)),
                                     self.out_displays[1].rect)
 
+
+
     def execute(self):
         # Defines execution
         if not self.allow_execute:
@@ -572,6 +576,7 @@ class Function(pygame.sprite.Sprite):
             self.out2_data += ":"
         self.out1_data = self.out1_data[:-1]
         self.out2_data = self.out2_data[:-1]
+        print(self.out1_data, self.out2_data)
 
     def merge(self):
         data2 = decode_shape(self.in1_data)

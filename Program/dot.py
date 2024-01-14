@@ -1,14 +1,14 @@
 import pygame
 
-path = "data/images/"
+path = "data/images/functions/"
 
 
 class Dot(pygame.sprite.Sprite):
-    def __init__(self, type, config, func_size, pos, input_=True, const=False):
+    def __init__(self, type_, config, func_size, pos, input_=True, const=False):
         pygame.sprite.Sprite.__init__(self)
         self.config = config
         self.func_size = func_size
-        self.type = type
+        self.type = type_
         self.input_ = input_
         self.connecting = False
         self.connected = False
@@ -20,7 +20,7 @@ class Dot(pygame.sprite.Sprite):
 
         self.data = None
 
-        if type == 0:
+        if self.type == 0:
             self.image = pygame.image.load(f"{path}dot.png").convert_alpha()
             self.image = pygame.transform.scale(self.image, (20, self.image.get_size()[1] * (20 / self.image.get_size()[0])))
             self.rect = self.image.get_rect()
@@ -64,3 +64,4 @@ class Dot(pygame.sprite.Sprite):
         self.connected_dot = None
         self.full = False
         self.sent = False
+        self.data = None
