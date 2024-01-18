@@ -10,8 +10,10 @@ class QuickStart:
         os.environ["SDL_VIDEO_CENTERED"] = "1"
         pygame.init()
 
+        # Create a small screen
         quick_screen = pygame.display.set_mode((400, 400), flags=pygame.NOFRAME, depth=32, vsync=True)
 
+        # Load the logo and give it the appropriate size
         logo = pygame.image.load("data/images/logo.png").convert_alpha()
         logo_size = logo.get_size()
         logo = pygame.transform.scale(logo, (logo_size[0] / 4, logo_size[1] / 4))
@@ -22,8 +24,10 @@ class QuickStart:
                                win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE) | win32con.WS_EX_LAYERED)
         win32gui.SetLayeredWindowAttributes(hwnd, win32api.RGB(*(255, 0, 128)), 0, win32con.LWA_COLORKEY)
 
+        # Fill the screen with the "transparent" color and show the logo on top of it
         quick_screen.fill((255, 0, 128))
         pygame.draw.circle(quick_screen, (26, 26, 26), (200, 200), logo_size[0] / 8 + 2)
         quick_screen.blit(logo, (200 - logo_size[0] / 8, 200 - logo_size[1] / 8))
 
+        # Quick refresh of the screen to show the contents
         pygame.display.update()

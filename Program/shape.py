@@ -21,6 +21,7 @@ shape_name = ["R", "C", "S", "W"]
 
 class Shape:
     def __init__(self, start_shape, config, func_size, input_=False, const=False):
+        # Initialization of all basic variables
         self.surface = pygame.Surface((shape_size, shape_size), pygame.SRCALPHA | pygame.SCALED)
         self.pos = (0, 0)
         self.rect = self.surface.get_rect()
@@ -40,8 +41,10 @@ class Shape:
             self.update("--------")
 
     def update(self, shape):
+        # First, the surface is erased to newly draw a shape
         self.surface.fill((255, 255, 255))
         pygame.draw.circle(self.surface, (230, 230, 230), (shape_size / 2, shape_size / 2), shape_size / 2.4)
+        # If it is a color (a string with one letter), a color is displayed
         if len(shape) == 1:
             color = pygame.image.load("data/images/shapes/col.png").convert_alpha()
             color.fill(colors[shape], special_flags=pygame.BLEND_RGBA_MIN)
@@ -49,12 +52,15 @@ class Shape:
             self.surface.blit(color, (((1 - 1/1.2) * shape_size / 2), ((1 - 1/1.2) * shape_size / 2) + 10))
             return
         self.shape = shape
+
+        # This loads up all the shape-forms that are then used to fill out the shape
         shapes = []
         for shape in range(4):
             shapes.append(pygame.image.load("data/images/shapes/" + str(shape + 1) + ".png").convert_alpha())
         for shape in range(4):
             shapes.append(pygame.image.load("data/images/shapes/" + str(shape + 1) + "b.png").convert_alpha())
 
+        # Basic decoder to separate a string into several layers if there are any
         temp_layer = ""
         layers = []
         for letter in self.shape:

@@ -15,7 +15,7 @@ class GameEnd:
                                                        play_size[0] / 2.8 * (screen_size[1] / 2560)))
         self.play_pos = (-55 * (screen_size[0] / 2560), -55 * (screen_size[0] / 2560))
 
-        self.end_png = pygame.transform.scale(pygame.image.load("data/images/menu/end.png"), (screen_size[0], screen_size[1]))
+        self.end_png = pygame.transform.scale(pygame.image.load("data/images/menu/end.png"), (screen_size[0], ratio * 1440))
 
         # Image from // https://famouscookies.com/product/chocolate-chip-cookies/
         self.cookie = pygame.image.load("data/images/menu/cookie.png")

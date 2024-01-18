@@ -16,3 +16,7 @@ levels = [
     [["r", "b", "WuWgWuWu", "r", "b", "CuSuCuRu"], ["CrWbRmWw:SbWrWuCm"], [1, 1, 1, 1, 1, 1, 1, 1]],  # 15
     [["RuWuRuWu", "y", "c", "r", "b", "SuSuSuSu"], ["WySr----:--ScRc--", "----ScSb:--RbWw--"], [1, 1, 1, 1, 1, 1, 1, 1]]  # 16
 ]
+
+# Per level a different setup is used: Different outputs,
+# different inputs and only the functions that are allowed to be used
+# Setup: [[Outputs], [Inputs], [Functions that are allowed]]

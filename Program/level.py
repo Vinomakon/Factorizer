@@ -126,10 +126,10 @@ class Level:
         func_ = self.spawner.check(mouse_pos)
         if func_ is not None:
             self.spawn(func_, mouse_pos)
-            return "spawn", None
+            return None, "spawn"
         for but in self.buttons:
             if but.rect.collidepoint(mouse_pos):
-                return but.func, but.func
+                return but.func, "button"
 
         op_done = False
         for func in range(len(self.functions)):
@@ -138,7 +138,7 @@ class Level:
                 if delete:
                     self.delete_func(current_func)
                     self.connecting = False
-                    return None, "delete"
+                    return "delete", None
                 on_dot, available, dot_pos, op_type, data_type, op_func_dot = current_func.check(mouse_pos)
                 if on_dot:
                     if not self.connecting:
@@ -153,11 +153,11 @@ class Level:
                             self.op_func_dot = op_func_dot
 
                             self.redo_connections()
-                            return None, None
+                            return None, "connect"
 
                     elif self.connecting:
                         # If one dot is being connected, the dot is available,
-                        # one is an input and the other an output and both are the same type:
+                        # one is an input and the other an output, and both are the same type:
                         # Connect both of these dots and create connections between them.
                         if available and self.connection_type != op_type and (
                                 self.data_type == data_type or current_func.function == "delete"):
@@ -174,7 +174,7 @@ class Level:
                             self.connecting = False
 
                             self.redo_connections()
-                            return None, None
+                            return None, "connect"
                         # Else: disable the active connecting and make the dot available again
 
                     # Put the used functions in front of the others
@@ -189,7 +189,7 @@ class Level:
                     self.dragging = current_func
 
                     self.redo_connections()
-                    return None, None
+                    return None, "connect"
 
         if delete:
             return None, None
@@ -210,10 +210,10 @@ class Level:
                         self.op_func_dot = op_func_dot
 
                         self.redo_connections()
-                        return None, None
+                        return None, "connect"
                 elif self.connecting:
                     # If one dot is being connected, the dot is available,
-                    # one is an input and the other an output and both are the same type:
+                    # one is an input and the other an output, and both are the same type:
                     # Connect both of these dots and create connections between them.
                     if available and self.connection_type != op_type and self.data_type == data_type:
                         connection = (self.connection1, dot_pos) if op_type == 1 else (dot_pos, self.connection1)
@@ -230,7 +230,7 @@ class Level:
                         self.forget()
 
                         self.redo_connections()
-                        return None, None
+                        return None, "connect"
 
         self.connecting = False
         self.connection1 = ()

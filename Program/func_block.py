@@ -1,6 +1,6 @@
 import pygame
 import shape
-import dot
+from dot import Dot
 
 images = {"delete": ["delete.png", [0], []],
           "cut": ["cut.png", [0], [0, 0]],
@@ -27,7 +27,7 @@ path = "data/images/functions/"
 max_layers = 2
 
 
-def decode_shape(data):
+def decode_shape(data):  # Rewrite the shape into lists
     temp_layer = ""
     layers = []
     for letter in data:
@@ -40,7 +40,7 @@ def decode_shape(data):
     return layers
 
 
-def color(data1, data2):
+def color(data1, data2):  # Mix two colors together through an addition of the color values
     col1 = colors[data1]
     col2 = colors[data2]
 
@@ -56,6 +56,8 @@ def color(data1, data2):
 class Function(pygame.sprite.Sprite):
     def __init__(self, func_type, pos=(0, 0)):
         pygame.sprite.Sprite.__init__(self)
+
+        # Initialization of all variables specific to the function-block
         self.function = func_type
         self.spawn_pos = pos
 
@@ -67,14 +69,17 @@ class Function(pygame.sprite.Sprite):
         self.rect.x = pos[0] - self.func_image.get_size()[0] / 2
         self.rect.y = pos[1] - self.func_image.get_size()[1] / 2
 
+        # Creates a sprite-group for the inputs and outputs
         self.inputs = pygame.sprite.Group()
         self.outputs = pygame.sprite.Group()
 
+        # Creates variables with which data can be processed
         self.out1_data = None
         self.out2_data = None
         self.in1_data = None
         self.in2_data = None
 
+        # Creates States, whether the function-block can receive data or not
         self.full = False
         self.outs_full = [False, False]
 
@@ -85,34 +90,38 @@ class Function(pygame.sprite.Sprite):
 
         self.image.blit(self.func_image, (0, 0))
 
+        # For the amount of inputs that are needed, input-dots are created with specific locations
         for inp in range(len(images[func_type][1])):
             if images[func_type][1][inp] == 1:
-                dot1 = dot.Dot(1, 16 + 16 * (((-1) ** (inp + 1)) if len(images[func_type][1]) > 1 else 0), self.rect.size, pos, True)
-                self.inputs.add(dot1)
+                dot = Dot(1, 16 + 16 * (((-1) ** (inp + 1)) if len(images[func_type][1]) > 1 else 0), self.rect.size, pos, True)
+                self.inputs.add(dot)
                 self.in_displays.append(shape.Shape("--------", 16 + 16 * (((-1) ** (inp + 1)) if len(images[func_type][1]) > 1 else 0), self.rect.size, 1))
             if images[func_type][1][inp] == 0:
-                dot2 = dot.Dot(0, 16 + 16 * (((-1) ** (inp + 1)) if len(images[func_type][1]) > 1 else 0), self.rect.size, pos, True)
-                self.inputs.add(dot2)
+                dot = Dot(0, 16 + 16 * (((-1) ** (inp + 1)) if len(images[func_type][1]) > 1 else 0), self.rect.size, pos, True)
+                self.inputs.add(dot)
                 self.in_displays.append(shape.Shape("--------", 16 + 16 * (((-1) ** (inp + 1)) if len(images[func_type][1]) > 1 else 0), self.rect.size, 1))
         self.inputs.draw(self.image)
 
+        # For the amount of outputs that are needed, output-dots are created with specific locations
         for out in range(len(images[func_type][2])):
             if images[func_type][2][out] == 1:
-                dot3 = dot.Dot(1, 16 + 16 * (((-1) ** (out + 1)) if len(images[func_type][2]) > 1 else 0), self.rect.size, pos, False)
-                self.outputs.add(dot3)
+                dot = Dot(1, 16 + 16 * (((-1) ** (out + 1)) if len(images[func_type][2]) > 1 else 0), self.rect.size, pos, False)
+                self.outputs.add(dot)
                 self.out_displays.append(shape.Shape("--------", 16 + 16 * (((-1) ** (out + 1)) if len(images[func_type][2]) > 1 else 0), self.rect.size, 0))
             if images[func_type][2][out] == 0:
-                dot4 = dot.Dot(0, 16 + 16 * (((-1) ** (out + 1)) if len(images[func_type][2]) > 1 else 0), self.rect.size, pos, False)
-                self.outputs.add(dot4)
+                dot = Dot(0, 16 + 16 * (((-1) ** (out + 1)) if len(images[func_type][2]) > 1 else 0), self.rect.size, pos, False)
+                self.outputs.add(dot)
                 self.out_displays.append(shape.Shape("--------", 16 + 16 * (((-1) ** (out + 1)) if len(images[func_type][2]) > 1 else 0), self.rect.size, 0))
         self.outputs.draw(self.image)
 
+        # Some variables to control the dragging of the function-block
         self.dragging = False
         self.init_pos = pos
         self.start_drag = (0, 0)
 
     def check(self, mouse_pos):
         # Failed Attempt N. 1
+        # This would've worked, but more information about the dot was needed
         """
         for dot in self.inputs:
             if dot.loc_rect.collidepoint(mouse_pos[0], mouse_pos[1]):
@@ -128,12 +137,14 @@ class Function(pygame.sprite.Sprite):
                 return True, dot.loc_rect.center, False, 1
         return False, (0, 0), False, 0
         """
+        # Initial variables
         on_dot = False
         available = False
         dot_pos = ()
         op_type = None
         data_type = None
         from_dot = None
+        # For each input, check if the mouse is on top of the dor
         for inp in self.inputs:
             if inp.rect.collidepoint(mouse_pos):
                 on_dot = True
@@ -478,20 +489,23 @@ class Function(pygame.sprite.Sprite):
                     self.image.blit(pygame.transform.scale(self.out_displays[1].surface, (30, 30)),
                                     self.out_displays[1].rect)
 
-
-
     def execute(self):
-        # Defines execution
+        # Only if the function is even allowed to execute this function can commence
         if not self.allow_execute:
             return
+        # Empty the input dots from any data and allow them to get data
         for inp in self.inputs:
             inp.data = None
             inp.full = False
+        # Since the function-block isn't full, we can also empty the output-dots data
         for out in self.outputs:
             out.data = None
 
+        # All the mentioned functions below only have one input
         if self.function == "rotate_cw" or self.function == "rotate_ccw" or self.function == "rotate_full" or self.function == "cut" or self.function == "delete":
+            # So it only needs one input data to be present
             if self.in1_data is not None:
+                # Based on the function assigned, the appropriate process is applied
                 if self.function == "rotate_cw":
                     self.rotate_cw()
                 elif self.function == "rotate_ccw":
@@ -505,21 +519,33 @@ class Function(pygame.sprite.Sprite):
                     self.delete()
                 elif self.in1_data is not None:
                     pass
+                # Empty the input
                 self.in1_data = None
+                # Define that the output is full
+                self.outs_full[0] = True
 
+                # Display what is currently in the output slot
+                self.out_displays[0].update(self.out1_data)
+                self.image.blit(pygame.transform.scale(self.out_displays[0].surface, (30, 30)),
+                                self.out_displays[0].rect)
+
+                # If of course it's the delete function, just empty the input slot
                 if self.function != "delete":
-                    self.outs_full[0] = True
-                    self.out_displays[0].update(self.out1_data)
-                    self.image.blit(pygame.transform.scale(self.out_displays[0].surface, (30, 30)),
-                                    self.out_displays[0].rect)
-                    if self.function == "cut":
-                        self.outs_full[1] = True
-                        self.out_displays[1].update(self.out2_data)
-                        self.image.blit(pygame.transform.scale(self.out_displays[1].surface, (30, 30)),
-                                        self.out_displays[1].rect)
+                    # Revert the function
+                    self.outs_full[0] = False
 
+                # Since the cut function has 2 outputs, the second
+                elif self.function == "cut":
+                    # Also define the second output as full
+                    self.outs_full[1] = True
+                    self.out_displays[1].update(self.out2_data)
+                    self.image.blit(pygame.transform.scale(self.out_displays[1].surface, (30, 30)),
+                                    self.out_displays[1].rect)
+        # For these functions below two input datas are necessary
         elif self.function == "merge" or self.function == "paint" or self.function == "color":
+            # So only if both input datas are present, it can continue
             if self.in1_data is not None and self.in2_data is not None:
+                # Based on the function assigned, the appropriate process is applied
                 if self.function == "merge":
                     self.merge()
                 elif self.function == "paint":
@@ -528,8 +554,10 @@ class Function(pygame.sprite.Sprite):
                     self.out1_data = color(self.in1_data, self.in2_data)
                 elif self.in2_data is not None:
                     pass
+                # Empty the inputs
                 self.in1_data = None
                 self.in2_data = None
+                # Define that the outputs are full
                 self.outs_full[0] = True
                 self.outs_full[1] = True
 
@@ -537,12 +565,15 @@ class Function(pygame.sprite.Sprite):
                 self.image.blit(pygame.transform.scale(self.out_displays[0].surface, (30, 30)),
                                 self.out_displays[0].rect)
 
+        # Show that the inputs are empty
         for shp in range(len(self.in_displays)):
             self.in_displays[shp].update("--------")
             self.image.blit(pygame.transform.scale(self.in_displays[shp].surface, (30, 30)),
                             self.in_displays[shp].rect)
 
-    def rotate_cw(self):
+    # After this section, the processing functions are defined. The names of the functions are self-explainable
+
+    def rotate_cw(self):  # Clockwise rotation
         data = decode_shape(self.in1_data)
         self.out1_data = ""
         for layer in range(len(data)):
@@ -550,7 +581,7 @@ class Function(pygame.sprite.Sprite):
             self.out1_data += ":"
         self.out1_data = self.out1_data[:-1]
 
-    def rotate_ccw(self):
+    def rotate_ccw(self):  # Counter-clockwise rotation
         data = decode_shape(self.in1_data)
         self.out1_data = ""
         for layer in range(len(data)):
@@ -558,7 +589,7 @@ class Function(pygame.sprite.Sprite):
             self.out1_data += ":"
         self.out1_data = self.out1_data[:-1]
 
-    def rotate_full(self):
+    def rotate_full(self):  # A full rotation of 180 degrees
         data = decode_shape(self.in1_data)
         self.out1_data = ""
         for layer in range(len(data)):
@@ -566,7 +597,7 @@ class Function(pygame.sprite.Sprite):
             self.out1_data += ":"
         self.out1_data = self.out1_data[:-1]
 
-    def cut(self):
+    def cut(self):  # A horizontal split of a shape
         data = decode_shape(self.in1_data)
         self.out1_data = ""
         for layer in range(len(data)):
@@ -578,7 +609,7 @@ class Function(pygame.sprite.Sprite):
         self.out2_data = self.out2_data[:-1]
         print(self.out1_data, self.out2_data)
 
-    def merge(self):
+    def merge(self):  # Merge two shapes together
         data2 = decode_shape(self.in1_data)
         data1 = decode_shape(self.in2_data)
         self.out1_data = ""
@@ -630,7 +661,7 @@ class Function(pygame.sprite.Sprite):
                     self.out1_data += ":"
                 self.out1_data = self.out1_data[:-1]
 
-    def paint(self):
+    def paint(self):  # Paint a shape with the color that is getting fed into it
         data1 = decode_shape(self.in1_data)
         data2 = self.in2_data
 
@@ -645,5 +676,5 @@ class Function(pygame.sprite.Sprite):
             self.out1_data += ":"
         self.out1_data = self.out1_data[:-1]
 
-    def delete(self):
+    def delete(self):  # Give an empty shape
         self.out1_data = "--------"
