@@ -51,7 +51,7 @@ class Tutorial:
         self.buttons.draw(self.surface)
 
     def on_click(self, click_pos):
-        # For all buttons it gets checked, if the mouse is in the rect of the button
+        # For every button, it gets checked if the mouse is in the rect of the button
         for but in self.buttons:
             # If the button was pressed, return what to do next and the sound that should be played
             if but.rect.collidepoint(click_pos):
@@ -79,6 +79,6 @@ class Tutorial:
             # It displays the video onto the screen
             self.surface.blit(pygame.transform.scale(pygame.image.frombuffer(self.img.tobytes(), self.shape, "BGR"),
                                                      (self.screen_size[0] / 2, self.ratio * 1440 / 2)), (self.screen_size[0] / 3.9, self.screen_size[1] / 20))
-        # Otherwise the video is reloaded and played from the beginning
+        # Otherwise, the video is reloaded and played from the beginning
         else:
             self.cap = cv2.VideoCapture(self.video)

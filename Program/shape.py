@@ -1,6 +1,5 @@
 import pygame
 import copy
-import math
 
 max_layers = 2
 shape_size = 448

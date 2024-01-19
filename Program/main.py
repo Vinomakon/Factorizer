@@ -66,7 +66,7 @@ fps = 1000  # Putting as much as possible
 
 # Variables to control the updating, sending, executing, etc. in the game
 tick = 0
-tick_duration = 0.25 + time.time()
+tick_duration = 0.25
 tick_time = time.time()
 
 # Loading up a music library, setting up the volume and playing the music,
@@ -90,7 +90,7 @@ sounds = {
 refresh_volume([["music", save_data[2][0]], ["sound", save_data[2][1]]])
 
 # Setting up the level the user recently completed, and a variable that states which level the player is on
-levels_done = save_data[0]
+levels_done = 16  # save_data[0]
 current_level = 0
 
 # Variables that have the different screens
@@ -337,7 +337,6 @@ while True:
     # If a sound need to be played, it is first checked if the sound is even in the sound library,
     # and if it is, it gets played
     if sound and sound in sounds:
-        print(sound)
         pygame.mixer.Sound.play(sounds[sound])
     sound = None
 
